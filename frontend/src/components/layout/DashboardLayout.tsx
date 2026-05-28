@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import ChatAssistant from '@/components/ui/ChatAssistant';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -54,6 +55,7 @@ export default function DashboardLayout({ children, allowedRoles, onRefresh }: D
           {children}
         </main>
       </div>
+      <ChatAssistant />
     </div>
   );
 }

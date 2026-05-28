@@ -8,9 +8,10 @@ import { formatDateTime } from '@/lib/utils';
 import { supabaseDashboardApi, supabaseLotsApi } from '@/lib/supabase-api';
 import {
   Package, CheckCircle, Clock, Warehouse,
-  Activity, TrendingUp,
+  Activity, TrendingUp, Download, FileText, FileSpreadsheet, ChevronDown
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import ExportModal, { ReportType } from '@/components/ui/ExportModal';
 
 interface Stats {
   lots_today: number;
@@ -33,6 +34,19 @@ export default function AdminDashboard() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [recentLots, setRecentLots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Export Modal State
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState<ReportType>('qc');
+  const [exportTitle, setExportTitle] = useState('');
+
+  const openExportModal = (type: ReportType, title: string) => {
+    setExportType(type);
+    setExportTitle(title);
+    setShowExportModal(true);
+    setShowExportMenu(false);
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -87,9 +101,40 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-white">Dashboard Admin</h1>
             <p className="text-slate-400 text-sm mt-1">Overview operasional Sima Arome — auto-refresh 30 detik</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <div className="w-2 h-2 bg-green-400 rounded-full pulse-dot" />
-            Live
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button 
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                <Download className="w-4 h-4 text-orange-500" />
+                Export Data
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </button>
+              
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-2 space-y-1">
+                    <button onClick={() => openExportModal('qc', 'Export Laporan QC')} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg flex items-center gap-2 transition-colors">
+                      <FileText className="w-4 h-4 text-blue-400" /> Laporan QC (PDF)
+                    </button>
+                    <button onClick={() => openExportModal('lot_history', 'Export Data Jadwal & Lot')} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg flex items-center gap-2 transition-colors">
+                      <FileSpreadsheet className="w-4 h-4 text-green-400" /> Jadwal & Lot (CSV/PDF)
+                    </button>
+                    <button onClick={() => openExportModal('warehouse', 'Export Inventory Gudang')} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg flex items-center gap-2 transition-colors">
+                      <FileText className="w-4 h-4 text-purple-400" /> Inventory Gudang (PDF)
+                    </button>
+                    <button onClick={() => openExportModal('dispatch', 'Export Riwayat Pengiriman')} className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg flex items-center gap-2 transition-colors">
+                      <FileSpreadsheet className="w-4 h-4 text-orange-400" /> Riwayat Pengiriman (CSV)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 hidden sm:flex">
+              <div className="w-2 h-2 bg-green-400 rounded-full pulse-dot" />
+              Live
+            </div>
           </div>
         </div>
 
@@ -206,6 +251,13 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      <ExportModal 
+        isOpen={showExportModal} 
+        onClose={() => setShowExportModal(false)} 
+        reportType={exportType} 
+        title={exportTitle} 
+      />
     </DashboardLayout>
   );
 }

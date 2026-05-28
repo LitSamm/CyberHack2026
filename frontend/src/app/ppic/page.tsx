@@ -7,7 +7,8 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabasePpicApi, supabaseMaterialsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
-import { Plus, X, Calendar, Flag, Trash2 } from 'lucide-react';
+import { Plus, X, Calendar, Flag, Trash2, Download } from 'lucide-react';
+import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +47,7 @@ export default function PPICDashboard() {
     material_id: '', scheduled_date: '', priority: 'normal', notes: '',
   });
   const [saving, setSaving] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -149,11 +151,20 @@ export default function PPICDashboard() {
             <h1 className="text-2xl font-bold text-white">PPIC & Produksi</h1>
             <p className="text-slate-400 text-sm mt-1">Manajemen jadwal dan lot produksi</p>
           </div>
-          <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4" />
-            Buat Jadwal
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setShowExportModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <Download className="w-4 h-4 text-orange-500" />
+              Export Jadwal
+            </button>
+            <button onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+              <Plus className="w-4 h-4" />
+              Buat Jadwal
+            </button>
+          </div>
         </div>
 
         {/* Kanban Board */}
@@ -314,6 +325,13 @@ export default function PPICDashboard() {
       <ConfirmModal isOpen={!!confirmDelete} title="Hapus Jadwal"
         message="Jadwal ini akan dihapus permanen. Lot tidak akan ikut terhapus." confirmText="Hapus"
         variant="danger" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} />
+
+      <ExportModal 
+        isOpen={showExportModal} 
+        onClose={() => setShowExportModal(false)} 
+        reportType="lot_history" 
+        title="Export Data Jadwal & Lot" 
+      />
     </DashboardLayout>
   );
 }

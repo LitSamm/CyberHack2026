@@ -141,7 +141,11 @@ export const supabasePpicApi = {
 export const supabaseWarehouseApi = {
   getSlots: async () => {
     const sb = getSupabase();
-    const { data, error } = await sb.from('warehouse_slots').select('*, lots!current_lot_id(lot_number, status)').order('slot_code');
+    const { data, error } = await sb
+      .from('warehouse_slots')
+      .select('*, lots!current_lot_id(lot_number, status, incoming_materials(material_name))')
+      .order('zone_row', { ascending: true })
+      .order('zone_col', { ascending: true });
     if (error) throw error;
     return data;
   },
@@ -151,7 +155,7 @@ export const supabaseWarehouseApi = {
     if (error) throw error;
     const total = (data || []).length;
     const occupied = (data || []).filter((s: any) => s.is_occupied).length;
-    return { total, occupied, available: total - occupied, occupancy_pct: total > 0 ? Math.round((occupied / total) * 100) : 0 };
+    return { total, occupied, available: total - occupied, occupancy_pct: total > 0 ? Math.round((occupied / total) * 100) : 0, rawData: data || [] };
   },
 };
 
@@ -200,4 +204,36 @@ export const supabaseSearchApi = {
       total: (lots.data?.length || 0) + (materials.data?.length || 0) + (dispatches.data?.length || 0),
     };
   },
+};
+
+// ── Notifications ─────────────────────────────────────
+export const supabaseNotificationsApi = {
+  getAll: async () => {
+    const sb = getSupabase();
+    const { data, error } = await sb.from('notifications').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  markAsRead: async (id: string) => {
+    const sb = getSupabase();
+    const { data, error } = await sb.from('notifications').update({ is_read: true }).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+  markAllAsRead: async () => {
+    const sb = getSupabase();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    const { error } = await sb.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    if (error) throw error;
+    return true;
+  },
+  deleteAll: async () => {
+    const sb = getSupabase();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    const { error } = await sb.from('notifications').delete().eq('user_id', user.id);
+    if (error) throw error;
+    return true;
+  }
 };

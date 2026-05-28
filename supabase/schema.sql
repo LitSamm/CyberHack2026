@@ -70,7 +70,14 @@ CREATE TABLE IF NOT EXISTS public.qc_checks (
   contamination_flag BOOLEAN DEFAULT FALSE,
   result TEXT NOT NULL CHECK (result IN ('pass', 'fail')),
   notes TEXT,
-  checked_at TIMESTAMPTZ DEFAULT NOW()
+  checked_at TIMESTAMPTZ DEFAULT NOW(),
+  -- AI Integration Columns
+  ai_color_grade INTEGER CHECK (ai_color_grade BETWEEN 1 AND 5),
+  ai_consistency_grade INTEGER CHECK (ai_consistency_grade BETWEEN 1 AND 5),
+  ai_contamination_flag BOOLEAN,
+  ai_confidence NUMERIC,
+  ai_recommendation TEXT CHECK (ai_recommendation IN ('approve', 'review', 'reject')),
+  ai_used BOOLEAN DEFAULT FALSE
 );
 
 -- =============================================
@@ -93,11 +100,14 @@ CREATE TABLE IF NOT EXISTS public.ppic_schedules (
 CREATE TABLE IF NOT EXISTS public.warehouse_slots (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   slot_code TEXT UNIQUE NOT NULL,
-  zone TEXT NOT NULL,
-  temperature_zone TEXT NOT NULL CHECK (temperature_zone IN ('ambient', 'cold', 'frozen')),
+  zone_row TEXT NOT NULL,
+  zone_col INTEGER NOT NULL,
+  temperature_zone TEXT NOT NULL CHECK (temperature_zone IN ('normal', 'cold_minus4', 'cold_minus20')),
+  hazard_type TEXT CHECK (hazard_type IN ('none', 'ibc', 'ippc')),
   is_occupied BOOLEAN DEFAULT FALSE,
   current_lot_id UUID REFERENCES public.lots(id),
-  hazard_type TEXT,
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  updated_by UUID REFERENCES public.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

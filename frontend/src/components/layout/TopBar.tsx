@@ -6,13 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi, searchApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
-
-interface Notification {
-  type: string;
-  message: string;
-  id: string;
-  table: string;
-}
+import NotificationBell from './NotificationBell';
 
 interface SearchResult {
   lots: any[];
@@ -27,14 +21,8 @@ export default function TopBar({ onRefresh }: { onRefresh?: () => void }) {
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [showNotifs, setShowNotifs] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    dashboardApi.getNotifications().then(r => setNotifications(r.data.notifications)).catch(() => {});
-  }, []);
 
   useEffect(() => {
     const handler = setTimeout(async () => {
@@ -58,7 +46,6 @@ export default function TopBar({ onRefresh }: { onRefresh?: () => void }) {
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSearch(false);
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifs(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -145,38 +132,7 @@ export default function TopBar({ onRefresh }: { onRefresh?: () => void }) {
         )}
 
         {/* Notifications */}
-        <div ref={notifRef} className="relative">
-          <button onClick={() => setShowNotifs(!showNotifs)}
-            className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <Bell className="w-5 h-5" />
-            {notifications.length > 0 && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full pulse-dot" />
-            )}
-          </button>
-
-          {showNotifs && (
-            <div className="absolute right-0 top-full mt-2 w-80 glass-card shadow-2xl rounded-xl overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">Notifikasi</span>
-                <span className="text-xs text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full">
-                  {notifications.length}
-                </span>
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-slate-500 text-sm">Tidak ada notifikasi</div>
-                ) : notifications.map((n, i) => (
-                  <div key={i} className="px-4 py-3 border-b border-slate-800/50 last:border-0">
-                    <div className={`text-xs font-medium mb-1 ${n.type === 'error' ? 'text-red-400' : 'text-yellow-400'}`}>
-                      {n.type === 'error' ? '⚠️ Overdue' : '🕐 Pending'}
-                    </div>
-                    <div className="text-sm text-slate-300">{n.message}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <NotificationBell />
 
         {/* User avatar */}
         <div className="flex items-center gap-2 pl-3 border-l border-slate-700">
