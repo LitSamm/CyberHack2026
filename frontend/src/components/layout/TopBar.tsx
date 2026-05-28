@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { dashboardApi, searchApi } from '@/lib/api';
 import { formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
-import NotificationBell from './NotificationBell';
+import NotificationBell from '@/components/ui/NotificationBell';
 
 interface SearchResult {
   lots: any[];
@@ -20,7 +20,6 @@ export default function TopBar({ onRefresh }: { onRefresh?: () => void }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
