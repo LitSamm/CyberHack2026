@@ -1,0 +1,319 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import StatusBadge from '@/components/ui/StatusBadge';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import { supabasePpicApi, supabaseMaterialsApi } from '@/lib/supabase-api';
+import { createClient } from '@/lib/supabase';
+import { formatDate } from '@/lib/utils';
+import { Plus, X, Calendar, Flag, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
+
+const COLUMNS = [
+  { id: 'queued', label: 'Antri', color: 'border-slate-500' },
+  { id: 'in_production', label: 'Produksi', color: 'border-blue-500' },
+  { id: 'completed', label: 'Selesai', color: 'border-green-500' },
+  { id: 'dispatched', label: 'Dikirim', color: 'border-purple-500' },
+];
+
+const PRIORITY_COLORS: Record<string, string> = {
+  urgent: 'bg-red-500/20 text-red-400 border-red-500/30',
+  normal: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  low: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+};
+
+// Auto-generate lot number: SA-YYYYMMDD-XXX
+async function generateLotNumber(sb: any) {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+  const prefix = `SA-${dateStr}-`;
+  const { data } = await sb.from('lots').select('lot_number').like('lot_number', `${prefix}%`).order('lot_number', { ascending: false }).limit(1);
+  const lastSeq = data && data.length > 0 ? parseInt(data[0].lot_number.split('-')[2]) : 0;
+  const seq = String(lastSeq + 1).padStart(3, '0');
+  return `${prefix}${seq}`;
+}
+
+export default function PPICDashboard() {
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    material_id: '', scheduled_date: '', priority: 'normal', notes: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [sched, mats] = await Promise.all([
+        supabasePpicApi.getSchedules(),
+        supabaseMaterialsApi.getAll({ status: 'approved' }),
+      ]);
+      setSchedules(sched || []);
+      setMaterials(mats || []);
+    } catch { toast.error('Gagal memuat data PPIC'); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const getColumnSchedules = (status: string) =>
+    schedules.filter(s => s.status === status);
+
+  const handleDragStart = (id: string) => setDragging(id);
+  const handleDragEnd = () => setDragging(null);
+
+  const handleDrop = async (targetStatus: string) => {
+    if (!dragging) return;
+    const schedule = schedules.find(s => s.id === dragging);
+    if (!schedule || schedule.status === targetStatus) { setDragging(null); return; }
+    const sb = createClient();
+    try {
+      await sb.from('ppic_schedules').update({ status: targetStatus }).eq('id', dragging);
+      if (schedule.lot_id) {
+        const statusMap: Record<string, string> = { queued: 'queued', in_production: 'in_production', completed: 'completed', dispatched: 'dispatched' };
+        if (statusMap[targetStatus]) await sb.from('lots').update({ status: statusMap[targetStatus] }).eq('id', schedule.lot_id);
+      }
+      setSchedules(prev => prev.map(s => s.id === dragging ? { ...s, status: targetStatus } : s));
+      toast.success(`Lot dipindah ke ${COLUMNS.find(c => c.id === targetStatus)?.label}`);
+    } catch { toast.error('Gagal update status'); }
+    setDragging(null);
+  };
+
+  const handleCreateSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const sb = createClient();
+    try {
+      // Get current user id
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) throw new Error('Tidak terautentikasi');
+      // Generate lot number
+      const lotNumber = await generateLotNumber(sb);
+      // Create lot
+      const { data: lot, error: lotErr } = await sb.from('lots').insert({
+        lot_number: lotNumber,
+        material_id: formData.material_id,
+        production_date: formData.scheduled_date,
+        status: 'queued',
+        created_by: user.id,
+        notes: formData.notes,
+      }).select().single();
+      if (lotErr) throw lotErr;
+      // Create schedule
+      const { error: schedErr } = await sb.from('ppic_schedules').insert({
+        lot_id: lot.id,
+        scheduled_date: formData.scheduled_date,
+        priority: formData.priority,
+        status: 'queued',
+        assigned_to: user.id,
+        notes: formData.notes,
+      });
+      if (schedErr) throw schedErr;
+      toast.success(`✅ Lot ${lotNumber} dijadwalkan!`);
+      setShowForm(false);
+      setFormData({ material_id: '', scheduled_date: '', priority: 'normal', notes: '' });
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal membuat jadwal');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    const sb = createClient();
+    try {
+      await sb.from('ppic_schedules').delete().eq('id', confirmDelete);
+      toast.success('Jadwal dihapus');
+      setConfirmDelete(null);
+      fetchData();
+    } catch { toast.error('Gagal menghapus jadwal'); }
+  };
+
+  return (
+    <DashboardLayout allowedRoles={['ppic', 'admin']} onRefresh={fetchData}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">PPIC & Produksi</h1>
+            <p className="text-slate-400 text-sm mt-1">Manajemen jadwal dan lot produksi</p>
+          </div>
+          <button onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" />
+            Buat Jadwal
+          </button>
+        </div>
+
+        {/* Kanban Board */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {COLUMNS.map(col => {
+            const colSchedules = getColumnSchedules(col.id);
+            return (
+              <div key={col.id}
+                onDragOver={e => e.preventDefault()}
+                onDrop={() => handleDrop(col.id)}
+                className={cn('glass-card p-4 min-h-64 border-t-2', col.color)}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-white text-sm">{col.label}</h3>
+                  <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
+                    {colSchedules.length}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {loading && col.id === 'queued' ? (
+                    Array.from({ length: 2 }).map((_, i) => <div key={i} className="skeleton h-24 rounded-lg" />)
+                  ) : colSchedules.map(s => (
+                    <div key={s.id}
+                      draggable
+                      onDragStart={() => handleDragStart(s.id)}
+                      onDragEnd={handleDragEnd}
+                      className={cn('kanban-card bg-slate-800/80 border border-slate-700 rounded-xl p-3 cursor-grab active:cursor-grabbing select-none',
+                        dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : ''
+                      )}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <span className="font-mono text-orange-400 text-xs font-semibold">
+                          {s.lots?.lot_number || 'SA-???'}
+                        </span>
+                        <button onClick={() => setConfirmDelete(s.id)}
+                          className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="text-slate-300 text-xs mb-2 truncate">
+                        {s.lots?.incoming_materials?.material_name || 'Material tidak diketahui'}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className={cn('badge text-xs', PRIORITY_COLORS[s.priority])}>
+                          <Flag className="w-2.5 h-2.5 mr-1" />
+                          {s.priority === 'urgent' ? 'Urgent' : s.priority === 'normal' ? 'Normal' : 'Rendah'}
+                        </span>
+                        <div className="flex items-center gap-1 text-slate-500 text-xs">
+                          <Calendar className="w-3 h-3" />
+                          {s.scheduled_date ? formatDate(s.scheduled_date) : '-'}
+                        </div>
+                      </div>
+                      {s.notes && (
+                        <div className="mt-2 text-slate-500 text-xs italic truncate">{s.notes}</div>
+                      )}
+                    </div>
+                  ))}
+
+                  {!loading && colSchedules.length === 0 && (
+                    <div className="text-center py-6 text-slate-600 text-xs border border-dashed border-slate-700 rounded-lg">
+                      Tidak ada lot
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Schedule List Table */}
+        <div className="glass-card p-5">
+          <h2 className="text-base font-semibold text-white mb-4">Semua Jadwal</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  {['Lot Number', 'Material', 'Jadwal', 'Prioritas', 'Status', 'Catatan'].map(h => (
+                    <th key={h} className="text-left text-xs text-slate-500 font-semibold pb-3 pr-4 uppercase tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {schedules.map(s => (
+                  <tr key={s.id} className="border-b border-slate-800/50 table-row-hover">
+                    <td className="py-3 pr-4">
+                      <span className="font-mono text-orange-400 font-semibold text-xs">{s.lots?.lot_number}</span>
+                    </td>
+                    <td className="py-3 pr-4 text-slate-300 text-xs">{s.lots?.incoming_materials?.material_name || '-'}</td>
+                    <td className="py-3 pr-4 text-slate-400 text-xs">{s.scheduled_date ? formatDate(s.scheduled_date) : '-'}</td>
+                    <td className="py-3 pr-4">
+                      <span className={cn('badge text-xs', PRIORITY_COLORS[s.priority])}>{s.priority}</span>
+                    </td>
+                    <td className="py-3 pr-4"><StatusBadge status={s.status} /></td>
+                    <td className="py-3 pr-4 text-slate-500 text-xs">{s.notes || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!loading && schedules.length === 0 && (
+              <div className="text-center py-8 text-slate-500">Belum ada jadwal</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Create Schedule Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          <div className="relative glass-card w-full max-w-md p-6">
+            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+            <h3 className="text-lg font-semibold text-white mb-5">Buat Jadwal Produksi</h3>
+            <p className="text-slate-400 text-xs mb-4">Sistem akan otomatis membuat lot dengan nomor SA-YYYYMMDD-XXX</p>
+            <form onSubmit={handleCreateSchedule} className="space-y-4">
+              <div>
+                <label className="block text-sm text-slate-300 mb-1.5">Material (sudah approve QC)</label>
+                <select value={formData.material_id} onChange={e => setFormData(p => ({ ...p, material_id: e.target.value }))} required
+                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500">
+                  <option value="">Pilih material...</option>
+                  {materials.map(m => (
+                    <option key={m.id} value={m.id}>{m.material_name} — {m.suppliers?.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-1.5">Tanggal Jadwal</label>
+                <input type="date" value={formData.scheduled_date} onChange={e => setFormData(p => ({ ...p, scheduled_date: e.target.value }))} required
+                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500" />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-1.5">Prioritas</label>
+                <select value={formData.priority} onChange={e => setFormData(p => ({ ...p, priority: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500">
+                  <option value="urgent">🔴 Urgent</option>
+                  <option value="normal">🔵 Normal</option>
+                  <option value="low">⚪ Rendah</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-1.5">Catatan Batch</label>
+                <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2}
+                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm resize-none focus:border-orange-500" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowForm(false)}
+                  className="flex-1 py-2.5 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-lg text-sm transition-colors">Batal</button>
+                <button type="submit" disabled={saving}
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  {saving ? 'Membuat...' : 'Buat Jadwal'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal isOpen={!!confirmDelete} title="Hapus Jadwal"
+        message="Jadwal ini akan dihapus permanen. Lot tidak akan ikut terhapus." confirmText="Hapus"
+        variant="danger" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} />
+    </DashboardLayout>
+  );
+}

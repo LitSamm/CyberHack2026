@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #F97316;
+  --color-brand-blue: #1D4ED8;
+  --color-sidebar: #0F172A;
+  --color-sidebar-hover: #1E293B;
+  --color-card: #1E293B;
+  --color-card-border: #334155;
+  --color-surface: #0F172A;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  --background: #0A0F1C;
+  --foreground: #F1F5F9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1E293B;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 12px;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #F97316, #FB923C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Stat card shine */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.4), transparent);
+}
+
+/* Animated pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Kanban card hover */
+.kanban-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Warehouse slot */
+.warehouse-slot {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.warehouse-slot:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* Table row hover */
+.table-row-hover {
+  transition: background-color 0.1s ease;
+}
+.table-row-hover:hover {
+  background-color: rgba(30, 41, 59, 0.6);
+}
+
+/* Sidebar nav item */
+.nav-item {
+  transition: all 0.15s ease;
+  border-radius: 8px;
+}
+.nav-item:hover {
+  background-color: rgba(249, 115, 22, 0.1);
+}
+.nav-item.active {
+  background-color: rgba(249, 115, 22, 0.15);
+  border-left: 3px solid #F97316;
+}
+
+/* Input focus */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  ring-color: #F97316;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+/* Loading skeleton */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #1E293B 25%, #273447 50%, #1E293B 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
