@@ -6,6 +6,12 @@
 # testing
 /coverage
 
+# python
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv-ml/
+
 # next.js
 **/.next/
 **/out/

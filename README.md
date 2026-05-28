@@ -16,6 +16,7 @@ AromOS adalah sistem manajemen operasi terintegrasi untuk Sima Arome, produsen e
 | Drag & Drop | Native HTML5 DnD (Kanban) |
 | Backend | Node.js + Express |
 | Database | Supabase (PostgreSQL) |
+| ML | Python + OpenCV |
 | Auth | Supabase Auth + JWT |
 | Deploy | Vercel (frontend) + Railway (backend) |
 
@@ -226,8 +227,12 @@ aromOS/
 │       └── db/                  ← supabase.js, seed.js
 ├── supabase/
 │   └── schema.sql               ← Database schema lengkap
+├── ml/
+│   └── apple_counter/           ← OpenCV apple conveyor counter
 └── README.md
 ```
+
+ML apple counter sementara ada di `ml/apple_counter/`. Lihat `ml/apple_counter/README.md` untuk setup, test, dan command generate video annotated.
 
 ---
 
