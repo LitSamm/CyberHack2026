@@ -21,8 +21,8 @@ router.get('/', authenticate, async (req, res) => {
 
 // POST /api/qc — submit QC check
 router.post('/', authenticate, requireRole('admin', 'qc'), auditLog('qc_checks', 'INSERT'), async (req, res) => {
-  const { lot_id, color_grade, consistency_grade, contamination_flag, result, notes } = req.body;
-  if (!lot_id || !color_grade || !consistency_grade || result === undefined) {
+  const { lot_id, material_id, color_grade, consistency_grade, contamination_flag, result, notes } = req.body;
+  if ((!lot_id && !material_id) || (lot_id && material_id) || !color_grade || !consistency_grade || result === undefined) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -30,7 +30,10 @@ router.post('/', authenticate, requireRole('admin', 'qc'), auditLog('qc_checks',
   const { data: qcData, error: qcError } = await supabase
     .from('qc_checks')
     .insert({
-      lot_id, color_grade, consistency_grade,
+      lot_id: lot_id || null,
+      material_id: material_id || null,
+      color_grade,
+      consistency_grade,
       contamination_flag: contamination_flag || false,
       result, notes,
       checked_by: req.user.id,
@@ -40,16 +43,14 @@ router.post('/', authenticate, requireRole('admin', 'qc'), auditLog('qc_checks',
     .single();
   if (qcError) return res.status(500).json({ error: qcError.message });
 
-  // Update lot status based on QC result
-  const newLotStatus = result === 'pass' ? 'in_production' : 'rejected';
-  await supabase.from('lots').update({ status: newLotStatus }).eq('id', lot_id);
-
-  // Update material qc_status
-  const { data: lot } = await supabase.from('lots').select('material_id').eq('id', lot_id).single();
-  if (lot) {
+  if (material_id) {
     await supabase.from('incoming_materials')
       .update({ qc_status: result === 'pass' ? 'approved' : 'rejected' })
-      .eq('id', lot.material_id);
+      .eq('id', material_id);
+  } else {
+    // Powder/extract QC is lot-level. It must not auto-start production.
+    const newLotStatus = result === 'pass' ? 'completed' : 'rejected';
+    await supabase.from('lots').update({ status: newLotStatus }).eq('id', lot_id);
   }
 
   res.status(201).json(qcData);

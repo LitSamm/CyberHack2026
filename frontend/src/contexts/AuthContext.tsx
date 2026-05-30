@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { createClient } from '@/lib/supabase';
+import { clearStoredAppSession, establishSupabaseSession, restoreStoredAppSession } from '@/lib/authSession';
 import { getRoleDashboard } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -28,23 +29,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
-    // Restore session from localStorage on mount
-    const savedToken = localStorage.getItem('aromos_token');
-    const savedUser = localStorage.getItem('aromos_user');
-    if (savedToken && savedUser) {
+    const restoreSession = async () => {
       try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        const storedSession = await restoreStoredAppSession<User>(supabase, localStorage);
+        if (storedSession) {
+          setToken(storedSession.token);
+          setUser(storedSession.user);
+        }
       } catch {
-        localStorage.removeItem('aromos_token');
-        localStorage.removeItem('aromos_user');
+        clearStoredAppSession(localStorage);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
+    };
+    restoreSession();
+  }, [supabase]);
 
   const login = async (email: string, password: string) => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -61,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (res.ok) {
           const data = await res.json();
+          await establishSupabaseSession(supabase, data);
           localStorage.setItem('aromos_token', data.access_token);
           localStorage.setItem('aromos_user', JSON.stringify(data.user));
           setToken(data.access_token);
@@ -72,14 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Backend responded with error — propagate it
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Login gagal');
-      } catch (err: any) {
+      } catch (err: unknown) {
         // If it's a network error (backend not running), fall through to Supabase direct
         const isNetworkError =
-          err.name === 'TypeError' ||
-          err.name === 'AbortError' ||
-          err.message?.includes('fetch') ||
-          err.message?.includes('Failed to fetch') ||
-          err.message?.includes('network');
+          err instanceof Error && (
+            err.name === 'TypeError' ||
+            err.name === 'AbortError' ||
+            err.message.includes('fetch') ||
+            err.message.includes('Failed to fetch') ||
+            err.message.includes('network')
+          );
 
         if (!isNetworkError) {
           // Backend was reachable but returned an auth error — don't retry
@@ -135,8 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
     } catch {}
-    localStorage.removeItem('aromos_token');
-    localStorage.removeItem('aromos_user');
+    clearStoredAppSession(localStorage);
     setUser(null);
     setToken(null);
     router.push('/login');

@@ -1,12 +1,18 @@
-from fastapi import FastAPI, File, UploadFile
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import random
-import time
-import asyncio
+from fastapi.responses import StreamingResponse
 
-app = FastAPI(title="AromOS CV Service")
+from receiving_session import ReceivingSessionController, SessionAlreadyRunning
 
-# Allow requests from the Next.js frontend
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DEMO_VIDEO = ROOT_DIR / "Apples sorted by the machine on conveyor in a fruit packing warehouse - HIDDEN THINGS (360p, h264).mp4"
+
+app = FastAPI(title="AromOS Receiving Camera Service")
+controller = ReceivingSessionController()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:3001"],
@@ -15,51 +21,49 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze")
-async def analyze_image(file: UploadFile = File(...)):
-    """
-    Mock endpoint that simulates a Computer Vision model analyzing material quality.
-    In a real scenario, this would load a .pt model (e.g., YOLO or ResNet),
-    run inference on the uploaded image, and return the results.
-    """
-    # Simulate processing time (1.5 to 3 seconds)
-    await asyncio.sleep(random.uniform(1.5, 3.0))
 
-    # Generate realistic mock data
-    color_grade = random.randint(3, 5)
-    consistency_grade = random.randint(3, 5)
-    contamination = random.choice([True, False, False, False]) # 25% chance of contamination
-    
-    # Calculate confidence based on simulated factors
-    confidence = round(random.uniform(75.5, 99.9), 1)
+@app.post("/receiving/video/start")
+async def start_video():
+    if not DEMO_VIDEO.exists():
+        raise HTTPException(status_code=404, detail="Demo conveyor video was not found")
+    try:
+        return controller.start_video(DEMO_VIDEO)
+    except SessionAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    # Determine AI recommendation logic
-    recommendation = "approve"
-    defects = []
 
-    if contamination:
-        recommendation = "reject"
-        defects.append("Foreign particles detected")
-    elif color_grade <= 3 and consistency_grade <= 3:
-        recommendation = "reject"
-        defects.append("Poor color and consistency")
-    elif color_grade < 4 or consistency_grade < 4:
-        recommendation = "review"
-        if color_grade < 4:
-            defects.append("Slight discoloration")
-        if consistency_grade < 4:
-            defects.append("Uneven consistency")
+@app.post("/receiving/webcam/start")
+async def start_webcam():
+    try:
+        return controller.start_webcam()
+    except SessionAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-    return {
-        "color_grade": color_grade,
-        "consistency_grade": consistency_grade,
-        "contamination_detected": contamination,
-        "confidence": confidence,
-        "defects": defects,
-        "recommendation": recommendation
-    }
+
+@app.post("/receiving/stop")
+async def stop_receiving():
+    return controller.stop()
+
+
+@app.post("/receiving/reset")
+async def reset_receiving():
+    return controller.reset()
+
+
+@app.get("/receiving/status")
+async def receiving_status():
+    return controller.status()
+
+
+@app.get("/receiving/stream")
+async def receiving_stream():
+    return StreamingResponse(
+        controller.mjpeg_stream(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
 
 if __name__ == "__main__":
     import uvicorn
-    # Run the server on port 8000
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

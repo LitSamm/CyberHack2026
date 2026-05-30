@@ -147,12 +147,9 @@ export default function WarehouseDashboard() {
         last_updated: new Date().toISOString()
       }).eq('id', selectedSlot.id);
       
-      // Update lot status to dispatched
-      await sb.from('lots').update({ status: 'dispatched' }).eq('id', lotId);
-      
       await logAudit('Remove Lot from Slot', selectedSlot.id, { occupied: true, lot_id: lotId }, { occupied: false });
 
-      toast.success(`Lot dikeluarkan dari gudang`);
+      toast.success('Lot dikeluarkan dari slot. Buat dispatch untuk mencatat pengiriman.');
       setSelectedSlot(null);
     } catch { 
       toast.error('Gagal mengeluarkan lot'); 

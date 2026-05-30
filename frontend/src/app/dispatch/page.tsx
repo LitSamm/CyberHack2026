@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PaperPlaneIcon, PlusIcon, CloseIcon, BoxIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { dispatchApi, lotsApi } from '@/lib/api';
+import { supabaseDispatchApi, supabaseLotsApi } from '@/lib/supabase-api';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
 import toast from 'react-hot-toast';
@@ -36,12 +36,12 @@ export default function DispatchPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [dispRes, lotsRes] = await Promise.all([
-        dispatchApi.getAll(filterStatus ? { status: filterStatus } : undefined),
-        lotsApi.getAll({ status: 'completed' }),
+      const [dispatchData, lotsData] = await Promise.all([
+        supabaseDispatchApi.getAll(filterStatus ? { status: filterStatus } : undefined),
+        supabaseLotsApi.getAll({ status: 'completed' }),
       ]);
-      setDispatches(dispRes.data);
-      setLots(lotsRes.data);
+      setDispatches(dispatchData || []);
+      setLots(lotsData || []);
     } catch { toast.error('Gagal memuat data pengiriman'); }
     finally { setLoading(false); }
   }, [filterStatus]);
@@ -56,16 +56,16 @@ export default function DispatchPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await dispatchApi.create({
+      await supabaseDispatchApi.create({
         ...formData,
         dispatch_date: formData.dispatch_date || new Date().toISOString(),
       });
-      toast.success('✅ Pengiriman berhasil dibuat');
+      toast.success('Pengiriman berhasil dibuat');
       setShowForm(false);
       setFormData({ lot_id: '', customer_name: '', destination: '', dispatch_date: '', notes: '' });
       fetchData();
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Gagal membuat pengiriman');
+      toast.error(err?.message || 'Gagal membuat pengiriman');
     } finally {
       setSaving(false);
     }
@@ -75,7 +75,7 @@ export default function DispatchPage() {
     const nextStatus = STATUS_NEXT[dispatch.status];
     if (!nextStatus) return;
     try {
-      await dispatchApi.update(dispatch.id, { status: nextStatus });
+      await supabaseDispatchApi.update(dispatch.id, { status: nextStatus });
       toast.success(`Status diperbarui: ${STATUS_LABELS[nextStatus]}`);
       fetchData();
     } catch { toast.error('Gagal update status'); }

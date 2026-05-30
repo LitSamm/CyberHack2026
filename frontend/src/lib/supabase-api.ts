@@ -56,16 +56,6 @@ export const supabaseDashboardApi = {
   },
 };
 
-// ── Users ─────────────────────────────────────────────
-export const supabaseUsersApi = {
-  getAll: async () => {
-    const sb = getSupabase();
-    const { data, error } = await sb.from('users').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
-  },
-};
-
 // ── Suppliers ─────────────────────────────────────────
 export const supabaseSuppliersApi = {
   getAll: async () => {
@@ -87,12 +77,6 @@ export const supabaseMaterialsApi = {
     if (error) throw error;
     return data;
   },
-  update: async (id: string, updates: any) => {
-    const sb = getSupabase();
-    const { data, error } = await sb.from('incoming_materials').update(updates).eq('id', id).select().single();
-    if (error) throw error;
-    return data;
-  },
 };
 
 // ── Lots ──────────────────────────────────────────────
@@ -111,7 +95,7 @@ export const supabaseLotsApi = {
 export const supabaseQcApi = {
   getAll: async (params?: { date?: string; result?: string }) => {
     const sb = getSupabase();
-    let query = sb.from('qc_checks').select('*, lots(lot_number, status), users!checked_by(name)').order('checked_at', { ascending: false });
+    let query = sb.from('qc_checks').select('*, lots(lot_number, status), incoming_materials(material_name, qc_status), users!checked_by(name)').order('checked_at', { ascending: false });
     if (params?.result) query = query.eq('result', params.result);
     if (params?.date) query = query.gte('checked_at', params.date).lt('checked_at', params.date + 'T23:59:59');
     const { data, error } = await query;
@@ -169,40 +153,44 @@ export const supabaseDispatchApi = {
     if (error) throw error;
     return data;
   },
-};
-
-// ── Audit ─────────────────────────────────────────────
-export const supabaseAuditApi = {
-  getAll: async (params?: any) => {
+  create: async (payload: { lot_id: string; customer_name: string; destination: string; dispatch_date?: string; notes?: string }) => {
     const sb = getSupabase();
-    let query = sb.from('audit_logs').select('*, users!user_id(name, email, role)', { count: 'exact' }).order('timestamp', { ascending: false }).limit(100);
-    if (params?.user_id) query = query.eq('user_id', params.user_id);
-    if (params?.table_name) query = query.eq('table_name', params.table_name);
-    if (params?.action) query = query.eq('action', params.action);
-    if (params?.from) query = query.gte('timestamp', params.from);
-    if (params?.to) query = query.lte('timestamp', params.to);
-    const { data, error, count } = await query;
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) throw new Error('Tidak terautentikasi');
+
+    const { data, error } = await sb.from('dispatches').insert({
+      lot_id: payload.lot_id,
+      customer_name: payload.customer_name,
+      destination: payload.destination,
+      dispatch_date: payload.dispatch_date || new Date().toISOString(),
+      dispatched_by: user.id,
+      status: 'prepared',
+      notes: payload.notes || null,
+    }).select('*, lots(lot_number, status), users!dispatched_by(name)').single();
     if (error) throw error;
-    return { data: data || [], total: count || 0 };
-  },
-};
 
-// ── Search ────────────────────────────────────────────
-export const supabaseSearchApi = {
-  search: async (q: string) => {
+    await sb.from('lots').update({ status: 'dispatched' }).eq('id', payload.lot_id);
+    await sb.from('warehouse_slots').update({
+      current_lot_id: null,
+      is_occupied: false,
+      last_updated: new Date().toISOString(),
+    }).eq('current_lot_id', payload.lot_id);
+
+    await sb.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'INSERT',
+      table_name: 'dispatches',
+      record_id: data.id,
+      new_value: { lot_id: payload.lot_id, customer_name: payload.customer_name, destination: payload.destination },
+    });
+
+    return data;
+  },
+  update: async (id: string, updates: { status?: string; notes?: string }) => {
     const sb = getSupabase();
-    const term = q.trim();
-    const [lots, materials, dispatches] = await Promise.all([
-      sb.from('lots').select('id, lot_number, status, production_date').ilike('lot_number', `%${term}%`).limit(5),
-      sb.from('incoming_materials').select('id, material_name, qc_status, received_date').ilike('material_name', `%${term}%`).limit(5),
-      sb.from('dispatches').select('id, customer_name, destination, status, dispatch_date').or(`customer_name.ilike.%${term}%,destination.ilike.%${term}%`).limit(5),
-    ]);
-    return {
-      lots: lots.data || [],
-      materials: materials.data || [],
-      dispatches: dispatches.data || [],
-      total: (lots.data?.length || 0) + (materials.data?.length || 0) + (dispatches.data?.length || 0),
-    };
+    const { data, error } = await sb.from('dispatches').update(updates).eq('id', id).select('*, lots(lot_number, status), users!dispatched_by(name)').single();
+    if (error) throw error;
+    return data;
   },
 };
 
