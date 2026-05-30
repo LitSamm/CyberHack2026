@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { BoxCubeIcon, InfoIcon, AlertIcon, CloseIcon, CheckCircleIcon, ArrowRightIcon, DownloadIcon } from '@/icons';
+import { Map, Download, AlertTriangle, ThermometerSnowflake, PackagePlus, Box, X, Info, ArrowRight } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/ui/StatCard';
 import { supabaseWarehouseApi, supabaseLotsApi } from '@/lib/supabase-api';
@@ -12,10 +12,10 @@ import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
-const TEMP_ZONE_CONFIG: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  normal: { label: 'Normal (Ambient)', bg: 'bg-green-500', text: 'text-green-500', border: 'border-green-500' },
-  cold_minus4: { label: 'Cold (-4°C)', bg: 'bg-cyan-400', text: 'text-cyan-400', border: 'border-cyan-400' },
-  cold_minus20: { label: 'Frozen (-20°C)', bg: 'bg-blue-600', text: 'text-blue-600', border: 'border-blue-600' },
+const TEMP_ZONE_CONFIG: Record<string, { label: string; text: string; badgeBg: string; badgeBorder: string; iconBg: string; iconBorder: string }> = {
+  normal: { label: 'Normal (Ambient)', text: 'text-green-500', badgeBg: 'bg-green-500/20', badgeBorder: 'border-green-500/30', iconBg: 'bg-green-500/20', iconBorder: 'border-green-500/50' },
+  cold_minus4: { label: 'Cold (-4°C)', text: 'text-cyan-400', badgeBg: 'bg-cyan-400/20', badgeBorder: 'border-cyan-400/30', iconBg: 'bg-cyan-400/20', iconBorder: 'border-cyan-400/50' },
+  cold_minus20: { label: 'Frozen (-20°C)', text: 'text-blue-600', badgeBg: 'bg-blue-600/20', badgeBorder: 'border-blue-600/30', iconBg: 'bg-blue-600/20', iconBorder: 'border-blue-600/50' },
 };
 
 const HAZARD_CONFIG: Record<string, string> = {
@@ -201,7 +201,7 @@ export default function WarehouseDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90 flex items-center gap-2">
-              
+              <Map className="w-6 h-6 text-orange-500" />
               Peta Lantai Gudang
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Sistem manajemen penempatan dan Cold-Chain Realtime</p>
@@ -210,7 +210,7 @@ export default function WarehouseDashboard() {
             onClick={() => setShowExportModal(true)}
             className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
           >
-            
+            <Download className="w-4 h-4 text-orange-500" />
             Export Inventory
           </button>
         </div>
@@ -218,7 +218,7 @@ export default function WarehouseDashboard() {
         {/* Mismatch Alert Banner */}
         {mismatches.length > 0 && (
           <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-in fade-in slide-in-from-top-4">
-            
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div>
               <div className="text-red-500 font-bold">
                 ⚠️ CRITICAL: {mismatches.length} Lot Berada di Zona Suhu yang Salah!
@@ -257,7 +257,7 @@ export default function WarehouseDashboard() {
               </div>
               
               <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-800">
-                
+                <ThermometerSnowflake className="w-5 h-5 text-cyan-400" />
                 <div>
                   <div className="text-sm font-semibold text-gray-800 dark:text-white/90">Cold-Chain</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">{coldChainOccupied} / {coldChainSlots.length} terisi</div>
@@ -279,7 +279,7 @@ export default function WarehouseDashboard() {
 
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 flex flex-col">
             <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2 mb-3">
-              
+              <PackagePlus className="w-4 h-4 text-orange-400" />
               Lot Siap Masuk ({availableLots.length})
             </h3>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-32 lg:max-h-[120px]">
@@ -294,7 +294,7 @@ export default function WarehouseDashboard() {
                         <span className="font-mono font-bold text-gray-800 dark:text-white/90">{lot.lot_number}</span>
                         <div className="text-gray-400 dark:text-gray-500 truncate max-w-[120px]">{lot.incoming_materials?.material_name}</div>
                       </div>
-                      <span className={cn("px-1.5 py-0.5 rounded text-[10px] border", TEMP_ZONE_CONFIG[req].bg.replace('bg-', 'bg-').concat('/20'), TEMP_ZONE_CONFIG[req].text, TEMP_ZONE_CONFIG[req].border.replace('border-', 'border-').concat('/30'))}>
+                      <span className={cn("px-1.5 py-0.5 rounded text-[10px] border", TEMP_ZONE_CONFIG[req].badgeBg, TEMP_ZONE_CONFIG[req].text, TEMP_ZONE_CONFIG[req].badgeBorder)}>
                         {TEMP_ZONE_CONFIG[req].label.split(' ')[0]}
                       </span>
                     </div>
@@ -353,7 +353,7 @@ export default function WarehouseDashboard() {
                           {/* Content (Center) */}
                           {slot.is_occupied ? (
                             <div className="flex flex-col items-center justify-center mt-2">
-                              
+                              <Box className="w-5 h-5 text-gray-600 dark:text-gray-400 mb-1" />
                               <div className="text-xs font-mono font-bold text-gray-800 dark:text-white/90">{slot.lots?.lot_number}</div>
                             </div>
                           ) : (
@@ -385,11 +385,11 @@ export default function WarehouseDashboard() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} />
           <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
             <button onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
-              
+              <X className="w-5 h-5" />
             </button>
             
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-800/50">
-              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border", TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.bg.replace('bg-', 'bg-').concat('/20'), TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.border.replace('border-', 'border-').concat('/50'))}>
+              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border", TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.iconBg, TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.iconBorder)}>
                 <span className={cn("font-mono font-bold text-xl", TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.text)}>
                   {selectedSlot.slot_code}
                 </span>
@@ -397,7 +397,7 @@ export default function WarehouseDashboard() {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Detail Slot Gudang</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-1.5">
-                  
+                  <Info className="w-4 h-4" />
                   {TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.label}
                 </p>
               </div>
@@ -424,7 +424,7 @@ export default function WarehouseDashboard() {
 
                 {mismatches.find(m => m.id === selectedSlot.id) && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
-                    
+                    <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-red-400">
                       <strong>Mismatch Suhu!</strong> Material ini memerlukan {TEMP_ZONE_CONFIG[getRequiredTemp(selectedSlot.lots?.incoming_materials?.material_name)]?.label}.
                     </div>
@@ -467,7 +467,7 @@ export default function WarehouseDashboard() {
 
                 {showTempWarning && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2 animate-in slide-in-from-top-2">
-                    
+                    <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-yellow-400">
                       <strong>Peringatan Suhu:</strong> Lot ini idealnya disimpan di <strong>{TEMP_ZONE_CONFIG[selectedLotTempReq]?.label}</strong>. Slot ini adalah {TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.label}.
                     </div>
@@ -480,7 +480,7 @@ export default function WarehouseDashboard() {
                   className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Konfirmasi Penempatan
-                  
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             )}

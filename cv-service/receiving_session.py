@@ -73,6 +73,7 @@ class ReceivingSessionController:
             self.mode = None
             self.state = "idle"
             self.count = 0
+            self.initial_count = 0
             self.started_at: float | None = None
             self.stopped_at: float | None = None
             self.error: str | None = None
@@ -116,13 +117,22 @@ class ReceivingSessionController:
         with self.lock:
             if self.state == "running":
                 raise SessionAlreadyRunning("A receiving session is already running")
-            self.session_id = f"RCV-{uuid.uuid4().hex[:8].upper()}"
-            self.mode = mode
+            
+            if self.state == "stopped" and self.mode == mode:
+                # Resume session
+                self.initial_count = self.count
+                if self.started_at and self.stopped_at:
+                    self.started_at += (time.monotonic() - self.stopped_at)
+            else:
+                self.session_id = f"RCV-{uuid.uuid4().hex[:8].upper()}"
+                self.mode = mode
+                self.count = 0
+                self.initial_count = 0
+                self.error = None
+                self.started_at = time.monotonic()
+                
             self.state = "running"
-            self.count = 0
-            self.error = None
             self.latest_jpeg = None
-            self.started_at = time.monotonic()
             self.stopped_at = None
         self.stop_event.clear()
         self.worker = threading.Thread(target=self._process, args=(source,), daemon=True)
@@ -130,7 +140,16 @@ class ReceivingSessionController:
         return self.status()
 
     def _process(self, source: str | int) -> None:
-        capture = self.capture_factory(source)
+        capture = None
+        if isinstance(source, int) and sys.platform == "win32":
+            # Try DirectShow first because MSMF activates all cameras during init
+            capture = self.capture_factory(source, cv2.CAP_DSHOW)
+            if not capture.isOpened():
+                capture.release()
+                capture = self.capture_factory(source, cv2.CAP_MSMF)
+        else:
+            capture = self.capture_factory(source)
+
         if not capture.isOpened():
             self._fail("Camera or video source could not be opened")
             return
@@ -172,7 +191,7 @@ class ReceivingSessionController:
                 if encoded:
                     with self.lock:
                         self.latest_jpeg = jpeg.tobytes()
-                        self.count = counter.count
+                        self.count = self.initial_count + counter.count
                 if self.frame_delay:
                     time.sleep(self.frame_delay)
         except Exception as exc:

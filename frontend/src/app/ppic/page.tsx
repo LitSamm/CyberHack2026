@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { PlusIcon, CloseIcon, CalenderIcon, InfoIcon, TrashBinIcon, DownloadIcon } from '@/icons';
+import { Plus, X, Calendar, Info, Trash2, Download } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -158,12 +158,12 @@ export default function PPICDashboard() {
               onClick={() => setShowExportModal(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
             >
-              
+              <Download className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               Export Jadwal
             </button>
             <button onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
-              
+              <Plus className="w-4 h-4 text-gray-800 dark:text-white/90" />
               Buat Jadwal
             </button>
           </div>
@@ -202,7 +202,7 @@ export default function PPICDashboard() {
                         </span>
                         <button onClick={() => setConfirmDelete(s.id)}
                           className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
-                          
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                       <div className="text-gray-700 dark:text-gray-300 text-xs mb-2 truncate">
@@ -210,11 +210,11 @@ export default function PPICDashboard() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className={cn('badge text-xs', PRIORITY_COLORS[s.priority])}>
-                          
+                          <Info className="w-3 h-3" />
                           {s.priority === 'urgent' ? 'Urgent' : s.priority === 'normal' ? 'Normal' : 'Rendah'}
                         </span>
                         <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500 text-xs">
-                          
+                          <Calendar className="w-3 h-3" />
                           {s.scheduled_date ? formatDate(s.scheduled_date) : '-'}
                         </div>
                       </div>
@@ -277,7 +277,7 @@ export default function PPICDashboard() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6">
             <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
-              
+              <X className="w-5 h-5" />
             </button>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">Buat Jadwal Produksi</h3>
             <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">Sistem akan otomatis membuat lot dengan nomor SA-YYYYMMDD-XXX</p>

@@ -1,8 +1,18 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') }); // load from root
 const { createClient } = require('@supabase/supabase-js');
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  process.exit(1);
+}
+
 const supabase = createClient(
-  "https://wcopdglthdslvkcrvvzr.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjb3BkZ2x0aGRzbHZrY3J2dnpyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA0NjU3MywiZXhwIjoyMDk1NjIyNTczfQ.HlHMcpoU3ZPbJd4WeiC_hDSgVki74fY2DFiDyKozBJg",
+  supabaseUrl,
+  supabaseKey,
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 

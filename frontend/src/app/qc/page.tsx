@@ -10,9 +10,11 @@ import { createClient } from '@/lib/supabase';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Camera, Download, Play, Square, RotateCcw, PackagePlus } from 'lucide-react';
 import ExportModal from '@/components/ui/ExportModal';
+import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function QCDashboard() {
+  const { user: authUser } = useAuth();
   const cameraServiceUrl = process.env.NEXT_PUBLIC_CV_SERVICE_URL || 'http://localhost:8000';
   const [pendingMaterials, setPendingMaterials] = useState<any[]>([]);
   const [todayChecks, setTodayChecks] = useState<any[]>([]);
@@ -34,6 +36,7 @@ export default function QCDashboard() {
   });
   const [cameraBusy, setCameraBusy] = useState(false);
   const [streamKey, setStreamKey] = useState(0);
+  const [selectedCamera, setSelectedCamera] = useState<number>(1);
   const [intakeForm, setIntakeForm] = useState({
     supplier_id: '', material_name: 'Apel Fuji', unit: 'item',
   });
@@ -61,31 +64,34 @@ export default function QCDashboard() {
       toast.error('Material belum dipilih.');
       return;
     }
+    if (!authUser) {
+      toast.error('Sesi login habis. Silakan login ulang.');
+      return;
+    }
     setSaving(true);
     const sb = createClient();
     try {
-      // Get current logged-in user
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) throw new Error("Tidak dapat mengautentikasi user saat ini");
-
-      // Determine final result from human
       const finalResult = result;
 
-      // Insert QC check
-      const { error: qcErr } = await sb.from('qc_checks').insert({
+      const { data: profile } = await sb.from('users').select('id').eq('id', authUser.id).single();
+      const payload: any = {
         material_id: selectedMaterial.id,
-        checked_by: user.id,
         color_grade: formData.color_grade,
         consistency_grade: formData.consistency_grade,
         contamination_flag: formData.contamination_flag,
         result: finalResult,
         notes: formData.notes,
         checked_at: new Date().toISOString(),
-      });
+      };
+      if (profile) payload.checked_by = authUser.id;
+
+      // Insert QC check
+      const { error: qcErr } = await sb.from('qc_checks').insert(payload);
       if (qcErr) throw qcErr;
       
       // Update material qc_status
-      await sb.from('incoming_materials').update({ qc_status: finalResult === 'pass' ? 'approved' : 'rejected' }).eq('id', selectedMaterial.id);
+      const { error: updateErr } = await sb.from('incoming_materials').update({ qc_status: finalResult === 'pass' ? 'approved' : 'rejected' }).eq('id', selectedMaterial.id);
+      if (updateErr) throw updateErr;
       
       toast.success(finalResult === 'pass' ? 'Material disetujui' : 'Material ditolak');
       setShowQCForm(false);
@@ -143,18 +149,27 @@ export default function QCDashboard() {
       toast.error('Pilih supplier dan isi nama material terlebih dahulu');
       return;
     }
-    await cameraRequest(`/receiving/${cameraMode}/start`);
-    setStreamKey(Date.now());
-    toast.success(cameraMode === 'video' ? 'Video demo mulai diproses' : 'Webcam live aktif');
+    const endpoint = cameraMode === 'webcam' ? `/receiving/webcam/start?device=${selectedCamera}` : `/receiving/video/start`;
+    try {
+      await cameraRequest(endpoint);
+      setStreamKey(Date.now());
+      toast.success(cameraMode === 'video' ? 'Video demo mulai diproses' : 'Webcam live aktif');
+    } catch (e) {
+      // Error is already shown by cameraRequest
+    }
   };
 
   const stopCamera = async () => {
-    await cameraRequest('/receiving/stop');
+    try {
+      await cameraRequest('/receiving/stop');
+    } catch (e) {}
   };
 
   const resetCamera = async () => {
-    await cameraRequest('/receiving/reset');
-    setStreamKey(Date.now());
+    try {
+      await cameraRequest('/receiving/reset');
+      setStreamKey(Date.now());
+    } catch (e) {}
   };
 
   const confirmCameraIntake = async () => {
@@ -166,37 +181,54 @@ export default function QCDashboard() {
       toast.error('Hentikan scanning sebelum menambahkan material');
       return;
     }
+    if (!intakeForm.supplier_id || !intakeForm.material_name.trim()) {
+      toast.error('Pilih supplier dan isi nama material terlebih dahulu');
+      return;
+    }
     setCameraBusy(true);
     const sb = createClient();
     try {
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) throw new Error('Tidak terautentikasi');
+      if (!authUser) throw new Error('Sesi login habis. Silakan login ulang.');
       const notes = `AI Camera Receiving | session=${cameraStatus.session_id} | mode=${cameraStatus.mode} | count=${cameraStatus.count}`;
-      const { data: material, error } = await sb.from('incoming_materials').insert({
-        supplier_id: intakeForm.supplier_id,
+      const { data: profile } = await sb.from('users').select('id').eq('id', authUser.id).single();
+      const payload: any = {
+        supplier_id: intakeForm.supplier_id || null,
         material_name: intakeForm.material_name.trim(),
         quantity: cameraStatus.count,
         unit: intakeForm.unit,
-        received_by: user.id,
+        received_date: new Date().toISOString(),
         qc_status: 'pending',
         notes,
-      }).select().single();
+      };
+      if (profile) payload.received_by = authUser.id;
+
+      const { data: material, error } = await sb.from('incoming_materials').insert(payload).select().single();
       if (error) throw error;
-      await sb.from('audit_logs').insert({
-        user_id: user.id,
+      const auditPayload: any = {
         action: 'CAMERA_RECEIVING',
         table_name: 'incoming_materials',
         record_id: material.id,
         new_value: { session_id: cameraStatus.session_id, mode: cameraStatus.mode, count: cameraStatus.count },
-      });
+      };
+      if (profile) auditPayload.user_id = authUser.id;
+
+      const { error: auditErr } = await sb.from('audit_logs').insert(auditPayload);
+      if (auditErr) console.warn('Gagal menyimpan audit_logs:', auditErr);
+      
       toast.success(`${cameraStatus.count} ${intakeForm.unit} masuk ke antrian QC`);
-      await cameraRequest('/receiving/reset');
-      fetchData();
     } catch (err: any) {
+      console.error('confirmCameraIntake error:', err);
       toast.error(err?.message || 'Gagal menambahkan material ke antrian QC');
+      return;
     } finally {
       setCameraBusy(false);
     }
+    
+    // Reset camera and refresh data independently of the insert try/catch
+    try {
+      await cameraRequest('/receiving/reset');
+    } catch (e) {}
+    await fetchData();
   };
 
   const passRate = todayChecks.length > 0
@@ -341,6 +373,21 @@ export default function QCDashboard() {
                   className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-sm text-white focus:border-orange-500"
                 />
               </div>
+              {cameraMode === 'webcam' && (
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-slate-400">Pilih Kamera</label>
+                  <select
+                    value={selectedCamera}
+                    onChange={e => setSelectedCamera(Number(e.target.value))}
+                    disabled={cameraStatus.state === 'running'}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-sm text-white focus:border-orange-500"
+                  >
+                    <option value={0}>Kamera 1 (Index 0)</option>
+                    <option value={1}>Kamera 2 (Index 1)</option>
+                    <option value={2}>Kamera 3 (Index 2)</option>
+                  </select>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-700 bg-slate-800/40 p-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">Source</div>

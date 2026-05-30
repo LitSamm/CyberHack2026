@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseNotificationsApi } from '@/lib/supabase-api';
 import { Bell, Clock, PackageCheck, ThermometerSnowflake, AlertTriangle, Info, Trash2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,6 +14,8 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, unread, qc, warehouse, ppic
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -39,13 +42,14 @@ export default function NotificationsPage() {
   };
 
   const deleteAll = async () => {
-    if (confirm('Hapus semua notifikasi? Ini tidak bisa dibatalkan.')) {
-      try {
-        await supabaseNotificationsApi.deleteAll();
-        setNotifications([]);
-        toast.success('Notifikasi berhasil dihapus');
-      } catch (err) {}
-    }
+    setDeleting(true);
+    try {
+      await supabaseNotificationsApi.deleteAll();
+      setNotifications([]);
+      toast.success('Notifikasi berhasil dihapus');
+      setShowConfirm(false);
+    } catch (err) {}
+    setDeleting(false);
   };
 
   const getIcon = (type: string) => {
@@ -82,7 +86,7 @@ export default function NotificationsPage() {
               <CheckCircle2 className="w-4 h-4 text-orange-500" />
               Tandai Semua Dibaca
             </button>
-            <button onClick={deleteAll} className="px-4 py-2 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-slate-700">
+            <button onClick={() => setShowConfirm(true)} className="px-4 py-2 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-slate-700">
               <Trash2 className="w-4 h-4" />
               Hapus Semua
             </button>
@@ -154,6 +158,16 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showConfirm}
+        title="Hapus Semua Notifikasi"
+        message="Hapus semua notifikasi? Ini tidak bisa dibatalkan."
+        confirmText="Hapus Semua"
+        variant="danger"
+        onConfirm={deleteAll}
+        onCancel={() => setShowConfirm(false)}
+        loading={deleting}
+      />
     </DashboardLayout>
   );
 }
