@@ -12,7 +12,12 @@ async function establishSupabaseSession(supabase, session) {
     access_token: session.access_token,
     refresh_token: session.refresh_token,
   });
-  if (error) throw error;
+  if (error) {
+    // Supabase client mungkin dikonfigurasi ke project berbeda dari backend.
+    // App menggunakan backend token via axios, bukan Supabase client langsung,
+    // jadi session sync gagal tidak memblokir login.
+    console.warn('Supabase setSession warning (non-fatal):', error.message);
+  }
 }
 
 async function restoreStoredAppSession(supabase, storage) {
