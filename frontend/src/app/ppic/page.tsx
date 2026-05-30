@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+
+import { PlusIcon, CloseIcon, CalenderIcon, InfoIcon, TrashBinIcon, DownloadIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabasePpicApi, supabaseMaterialsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
-import { Plus, X, Calendar, Flag, Trash2, Download } from 'lucide-react';
+
 import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -22,7 +24,7 @@ const COLUMNS = [
 const PRIORITY_COLORS: Record<string, string> = {
   urgent: 'bg-red-500/20 text-red-400 border-red-500/30',
   normal: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  low: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+  low: 'bg-slate-500/20 text-gray-500 dark:text-gray-400 border-slate-500/30',
 };
 
 // Auto-generate lot number: SA-YYYYMMDD-XXX
@@ -148,20 +150,20 @@ export default function PPICDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">PPIC & Produksi</h1>
-            <p className="text-slate-400 text-sm mt-1">Manajemen jadwal dan lot produksi</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">PPIC & Produksi</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manajemen jadwal dan lot produksi</p>
           </div>
           <div className="flex gap-2">
             <button 
               onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
             >
-              <Download className="w-4 h-4 text-orange-500" />
+              
               Export Jadwal
             </button>
             <button onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
-              <Plus className="w-4 h-4" />
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
+              
               Buat Jadwal
             </button>
           </div>
@@ -175,10 +177,10 @@ export default function PPICDashboard() {
               <div key={col.id}
                 onDragOver={e => e.preventDefault()}
                 onDrop={() => handleDrop(col.id)}
-                className={cn('glass-card p-4 min-h-64 border-t-2', col.color)}>
+                className={cn('rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 min-h-64 border-t-2', col.color)}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-white text-sm">{col.label}</h3>
-                  <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
+                  <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm">{col.label}</h3>
+                  <span className="text-xs bg-slate-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
                     {colSchedules.length}
                   </span>
                 </div>
@@ -191,7 +193,7 @@ export default function PPICDashboard() {
                       draggable
                       onDragStart={() => handleDragStart(s.id)}
                       onDragEnd={handleDragEnd}
-                      className={cn('kanban-card bg-slate-800/80 border border-slate-700 rounded-xl p-3 cursor-grab active:cursor-grabbing select-none',
+                      className={cn('kanban-card bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-800 rounded-xl p-3 cursor-grab active:cursor-grabbing select-none',
                         dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : ''
                       )}>
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -200,30 +202,30 @@ export default function PPICDashboard() {
                         </span>
                         <button onClick={() => setConfirmDelete(s.id)}
                           className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
-                          <Trash2 className="w-3 h-3" />
+                          
                         </button>
                       </div>
-                      <div className="text-slate-300 text-xs mb-2 truncate">
+                      <div className="text-gray-700 dark:text-gray-300 text-xs mb-2 truncate">
                         {s.lots?.incoming_materials?.material_name || 'Material tidak diketahui'}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className={cn('badge text-xs', PRIORITY_COLORS[s.priority])}>
-                          <Flag className="w-2.5 h-2.5 mr-1" />
+                          
                           {s.priority === 'urgent' ? 'Urgent' : s.priority === 'normal' ? 'Normal' : 'Rendah'}
                         </span>
-                        <div className="flex items-center gap-1 text-slate-500 text-xs">
-                          <Calendar className="w-3 h-3" />
+                        <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500 text-xs">
+                          
                           {s.scheduled_date ? formatDate(s.scheduled_date) : '-'}
                         </div>
                       </div>
                       {s.notes && (
-                        <div className="mt-2 text-slate-500 text-xs italic truncate">{s.notes}</div>
+                        <div className="mt-2 text-gray-400 dark:text-gray-500 text-xs italic truncate">{s.notes}</div>
                       )}
                     </div>
                   ))}
 
                   {!loading && colSchedules.length === 0 && (
-                    <div className="text-center py-6 text-slate-600 text-xs border border-dashed border-slate-700 rounded-lg">
+                    <div className="text-center py-6 text-slate-600 text-xs border border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
                       Tidak ada lot
                     </div>
                   )}
@@ -234,36 +236,36 @@ export default function PPICDashboard() {
         </div>
 
         {/* Schedule List Table */}
-        <div className="glass-card p-5">
-          <h2 className="text-base font-semibold text-white mb-4">Semua Jadwal</h2>
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-5">
+          <h2 className="text-base font-semibold text-gray-800 dark:text-white/90 mb-4">Semua Jadwal</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-700">
+                <tr className="border-b border-gray-200 dark:border-gray-800">
                   {['Lot Number', 'Material', 'Jadwal', 'Prioritas', 'Status', 'Catatan'].map(h => (
-                    <th key={h} className="text-left text-xs text-slate-500 font-semibold pb-3 pr-4 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="text-left text-xs text-gray-400 dark:text-gray-500 font-semibold pb-3 pr-4 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {schedules.map(s => (
-                  <tr key={s.id} className="border-b border-slate-800/50 table-row-hover">
+                  <tr key={s.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                     <td className="py-3 pr-4">
                       <span className="font-mono text-orange-400 font-semibold text-xs">{s.lots?.lot_number}</span>
                     </td>
-                    <td className="py-3 pr-4 text-slate-300 text-xs">{s.lots?.incoming_materials?.material_name || '-'}</td>
-                    <td className="py-3 pr-4 text-slate-400 text-xs">{s.scheduled_date ? formatDate(s.scheduled_date) : '-'}</td>
+                    <td className="py-3 pr-4 text-gray-700 dark:text-gray-300 text-xs">{s.lots?.incoming_materials?.material_name || '-'}</td>
+                    <td className="py-3 pr-4 text-gray-500 dark:text-gray-400 text-xs">{s.scheduled_date ? formatDate(s.scheduled_date) : '-'}</td>
                     <td className="py-3 pr-4">
                       <span className={cn('badge text-xs', PRIORITY_COLORS[s.priority])}>{s.priority}</span>
                     </td>
                     <td className="py-3 pr-4"><StatusBadge status={s.status} /></td>
-                    <td className="py-3 pr-4 text-slate-500 text-xs">{s.notes || '-'}</td>
+                    <td className="py-3 pr-4 text-gray-400 dark:text-gray-500 text-xs">{s.notes || '-'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {!loading && schedules.length === 0 && (
-              <div className="text-center py-8 text-slate-500">Belum ada jadwal</div>
+              <div className="text-center py-8 text-gray-400 dark:text-gray-500">Belum ada jadwal</div>
             )}
           </div>
         </div>
@@ -273,17 +275,17 @@ export default function PPICDashboard() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          <div className="relative glass-card w-full max-w-md p-6">
-            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
+          <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6">
+            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
+              
             </button>
-            <h3 className="text-lg font-semibold text-white mb-5">Buat Jadwal Produksi</h3>
-            <p className="text-slate-400 text-xs mb-4">Sistem akan otomatis membuat lot dengan nomor SA-YYYYMMDD-XXX</p>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">Buat Jadwal Produksi</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-4">Sistem akan otomatis membuat lot dengan nomor SA-YYYYMMDD-XXX</p>
             <form onSubmit={handleCreateSchedule} className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Material (sudah approve QC)</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Material (sudah approve QC)</label>
                 <select value={formData.material_id} onChange={e => setFormData(p => ({ ...p, material_id: e.target.value }))} required
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500">
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500">
                   <option value="">Pilih material...</option>
                   {materials.map(m => (
                     <option key={m.id} value={m.id}>{m.material_name} — {m.suppliers?.name}</option>
@@ -291,29 +293,29 @@ export default function PPICDashboard() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Tanggal Jadwal</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Tanggal Jadwal</label>
                 <input type="date" value={formData.scheduled_date} onChange={e => setFormData(p => ({ ...p, scheduled_date: e.target.value }))} required
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500" />
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500" />
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Prioritas</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Prioritas</label>
                 <select value={formData.priority} onChange={e => setFormData(p => ({ ...p, priority: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500">
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500">
                   <option value="urgent">🔴 Urgent</option>
                   <option value="normal">🔵 Normal</option>
                   <option value="low">⚪ Rendah</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Catatan Batch</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Catatan Batch</label>
                 <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2}
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm resize-none focus:border-orange-500" />
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm resize-none focus:border-orange-500" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-lg text-sm transition-colors">Batal</button>
+                  className="flex-1 py-2.5 border border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm transition-colors">Batal</button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Membuat...' : 'Buat Jadwal'}
                 </button>
               </div>

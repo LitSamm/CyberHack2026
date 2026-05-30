@@ -1,14 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+
+import { GridIcon, GroupIcon, ArrowRightIcon, PlugInIcon, DocsIcon, CheckCircleIcon, CalenderIcon, BoxCubeIcon, PaperPlaneIcon, BoxIcon } from '@/icons';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn, getRoleLabel } from '@/lib/utils';
-import {
-  LayoutDashboard, FlaskConical, Calendar, Warehouse,
-  Truck, FileText, Users, Leaf, LogOut, ChevronRight,
-  Settings,
-} from 'lucide-react';
+
 
 interface NavItem {
   href: string;
@@ -18,13 +16,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard Admin', roles: ['admin'] },
-  { href: '/admin/users', icon: <Users className="w-5 h-5" />, label: 'Manajemen User', roles: ['admin'] },
-  { href: '/admin/audit', icon: <FileText className="w-5 h-5" />, label: 'Audit Trail', roles: ['admin'] },
-  { href: '/qc', icon: <FlaskConical className="w-5 h-5" />, label: 'QC Dashboard', roles: ['qc', 'admin'] },
-  { href: '/ppic', icon: <Calendar className="w-5 h-5" />, label: 'PPIC & Produksi', roles: ['ppic', 'admin'] },
-  { href: '/warehouse', icon: <Warehouse className="w-5 h-5" />, label: 'Gudang', roles: ['warehouse', 'admin'] },
-  { href: '/dispatch', icon: <Truck className="w-5 h-5" />, label: 'Pengiriman', roles: ['warehouse', 'ppic', 'admin'] },
+  { href: '/admin', icon: <GridIcon />, label: 'Dashboard Admin', roles: ['admin'] },
+  { href: '/admin/users', icon: <GroupIcon />, label: 'Manajemen User', roles: ['admin'] },
+  { href: '/admin/audit', icon: <DocsIcon />, label: 'Audit Trail', roles: ['admin'] },
+  { href: '/qc', icon: <BoxIcon />, label: 'QC Dashboard', roles: ['qc', 'admin'] },
+  { href: '/ppic', icon: <CalenderIcon />, label: 'PPIC & Produksi', roles: ['ppic', 'admin'] },
+  { href: '/warehouse', icon: <BoxCubeIcon />, label: 'Gudang', roles: ['warehouse', 'admin'] },
+  { href: '/dispatch', icon: <PaperPlaneIcon />, label: 'Pengiriman', roles: ['warehouse', 'ppic', 'admin'] },
 ];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -46,7 +44,7 @@ export default function Sidebar() {
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Leaf className="w-5 h-5 text-white" />
+            <BoxCubeIcon />
           </div>
           <div>
             <div className="text-white font-bold text-lg leading-none">AromOS</div>
@@ -89,7 +87,7 @@ export default function Sidebar() {
             >
               {item.icon}
               <span className="flex-1">{item.label}</span>
-              {isActive && <ChevronRight className="w-3 h-3 opacity-60" />}
+              {isActive && <ArrowRightIcon />}
             </Link>
           );
         })}
@@ -101,7 +99,7 @@ export default function Sidebar() {
           onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
         >
-          <LogOut className="w-5 h-5" />
+          <PlugInIcon />
           <span>Keluar</span>
         </button>
       </div>

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+
+import { BoxCubeIcon, InfoIcon, AlertIcon, CloseIcon, CheckCircleIcon, ArrowRightIcon, DownloadIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/ui/StatCard';
 import { supabaseWarehouseApi, supabaseLotsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
-import { Warehouse, Thermometer, AlertTriangle, X, Info, Snowflake, Flame, PackageCheck, ArrowRight, CheckCircle, Download } from 'lucide-react';
+
 import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -180,7 +182,7 @@ export default function WarehouseDashboard() {
       if (slot.temperature_zone === 'cold_minus20') return 'bg-blue-800/60 border-blue-400 hover:bg-blue-800/70 shadow-[0_0_15px_rgba(3,105,161,0.5)]';
     }
     
-    return 'bg-slate-700/60 border-slate-600 hover:bg-slate-700';
+    return 'bg-slate-700/60 border-slate-600 hover:bg-gray-100 dark:hover:bg-gray-800';
   };
 
   // Group slots by row (A-J)
@@ -201,17 +203,17 @@ export default function WarehouseDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Warehouse className="w-6 h-6 text-orange-500" />
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90 flex items-center gap-2">
+              
               Peta Lantai Gudang
             </h1>
-            <p className="text-slate-400 text-sm mt-1">Sistem manajemen penempatan dan Cold-Chain Realtime</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Sistem manajemen penempatan dan Cold-Chain Realtime</p>
           </div>
           <button 
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
           >
-            <Download className="w-4 h-4 text-orange-500" />
+            
             Export Inventory
           </button>
         </div>
@@ -219,7 +221,7 @@ export default function WarehouseDashboard() {
         {/* Mismatch Alert Banner */}
         {mismatches.length > 0 && (
           <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-in fade-in slide-in-from-top-4">
-            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5 animate-pulse" />
+            
             <div>
               <div className="text-red-500 font-bold">
                 ⚠️ CRITICAL: {mismatches.length} Lot Berada di Zona Suhu yang Salah!
@@ -240,60 +242,60 @@ export default function WarehouseDashboard() {
 
         {/* Stats & Legend */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 glass-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-700/50">
+          <div className="lg:col-span-3 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-200 dark:border-gray-800/50">
               <div className="flex gap-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{stats?.total || 0}</div>
-                  <div className="text-xs text-slate-400">Total Slot</div>
+                  <div className="text-2xl font-bold text-gray-800 dark:text-white/90">{stats?.total || 0}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Total Slot</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-400">{stats?.occupied || 0}</div>
-                  <div className="text-xs text-slate-400">Terisi</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Terisi</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-400">{stats?.available || 0}</div>
-                  <div className="text-xs text-slate-400">Tersedia</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Tersedia</div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                <Snowflake className="w-5 h-5 text-cyan-400" />
+              <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-800">
+                
                 <div>
-                  <div className="text-sm font-semibold text-white">Cold-Chain</div>
-                  <div className="text-xs text-slate-400">{coldChainOccupied} / {coldChainSlots.length} terisi</div>
+                  <div className="text-sm font-semibold text-gray-800 dark:text-white/90">Cold-Chain</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{coldChainOccupied} / {coldChainSlots.length} terisi</div>
                 </div>
               </div>
             </div>
 
             {/* Visual Legend */}
             <div className="flex flex-wrap gap-4 text-xs">
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-green-500/20 border border-green-500/30" /><span className="text-slate-300">Tersedia (Normal)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-blue-500/40 border border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" /><span className="text-white font-medium">Terisi (Normal)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-cyan-400/20 border border-cyan-400/30" /><span className="text-slate-300">Tersedia (-4°C)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-sky-500/40 border border-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]" /><span className="text-white font-medium">Terisi (-4°C)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-sky-200/10 border border-sky-200/30" /><span className="text-slate-300">Tersedia (-20°C)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-blue-800/60 border border-blue-400 shadow-[0_0_10px_rgba(3,105,161,0.5)]" /><span className="text-white font-medium">Terisi (-20°C)</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-yellow-500/20 border border-yellow-500/50 text-center leading-none">🟡</div><span className="text-slate-300">Hazardous (IBC/IPPC)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-green-500/20 border border-green-500/30" /><span className="text-gray-700 dark:text-gray-300">Tersedia (Normal)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-blue-500/40 border border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" /><span className="text-gray-800 dark:text-white/90 font-medium">Terisi (Normal)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-cyan-400/20 border border-cyan-400/30" /><span className="text-gray-700 dark:text-gray-300">Tersedia (-4°C)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-sky-500/40 border border-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]" /><span className="text-gray-800 dark:text-white/90 font-medium">Terisi (-4°C)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-sky-200/10 border border-sky-200/30" /><span className="text-gray-700 dark:text-gray-300">Tersedia (-20°C)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-blue-800/60 border border-blue-400 shadow-[0_0_10px_rgba(3,105,161,0.5)]" /><span className="text-gray-800 dark:text-white/90 font-medium">Terisi (-20°C)</span></div>
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-yellow-500/20 border border-yellow-500/50 text-center leading-none">🟡</div><span className="text-gray-700 dark:text-gray-300">Hazardous (IBC/IPPC)</span></div>
             </div>
           </div>
 
-          <div className="glass-card p-4 flex flex-col">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
-              <PackageCheck className="w-4 h-4 text-orange-400" />
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 flex flex-col">
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2 mb-3">
+              
               Lot Siap Masuk ({availableLots.length})
             </h3>
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-32 lg:max-h-[120px]">
               {availableLots.length === 0 ? (
-                <div className="text-xs text-slate-500 text-center py-4">Semua lot sudah dialokasikan</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Semua lot sudah dialokasikan</div>
               ) : (
                 availableLots.map(lot => {
                   const req = getRequiredTemp(lot.incoming_materials?.material_name);
                   return (
-                    <div key={lot.id} className="text-xs p-2 bg-slate-800/60 rounded border border-slate-700 flex justify-between items-center">
+                    <div key={lot.id} className="text-xs p-2 bg-gray-100 dark:bg-gray-800/60 rounded border border-gray-200 dark:border-gray-800 flex justify-between items-center">
                       <div>
-                        <span className="font-mono font-bold text-white">{lot.lot_number}</span>
-                        <div className="text-slate-500 truncate max-w-[120px]">{lot.incoming_materials?.material_name}</div>
+                        <span className="font-mono font-bold text-gray-800 dark:text-white/90">{lot.lot_number}</span>
+                        <div className="text-gray-400 dark:text-gray-500 truncate max-w-[120px]">{lot.incoming_materials?.material_name}</div>
                       </div>
                       <span className={cn("px-1.5 py-0.5 rounded text-[10px] border", TEMP_ZONE_CONFIG[req].bg.replace('bg-', 'bg-').concat('/20'), TEMP_ZONE_CONFIG[req].text, TEMP_ZONE_CONFIG[req].border.replace('border-', 'border-').concat('/30'))}>
                         {TEMP_ZONE_CONFIG[req].label.split(' ')[0]}
@@ -307,7 +309,7 @@ export default function WarehouseDashboard() {
         </div>
 
         {/* 10x8 Interactive Grid Map */}
-        <div className="glass-card p-6 overflow-x-auto">
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-6 overflow-x-auto">
           {loading ? (
             <div className="h-96 flex items-center justify-center">
               <div className="w-8 h-8 border-4 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
@@ -317,7 +319,7 @@ export default function WarehouseDashboard() {
               {/* Column Headers */}
               <div className="grid grid-cols-8 gap-2 mb-2 ml-8">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map(c => (
-                  <div key={c} className="text-center text-slate-500 text-sm font-bold">{c}</div>
+                  <div key={c} className="text-center text-gray-400 dark:text-gray-500 text-sm font-bold">{c}</div>
                 ))}
               </div>
               
@@ -326,7 +328,7 @@ export default function WarehouseDashboard() {
                 {rows.map(r => (
                   <div key={r} className="flex items-center gap-2">
                     {/* Row Header */}
-                    <div className="w-6 text-center text-slate-500 font-bold text-sm">{r}</div>
+                    <div className="w-6 text-center text-gray-400 dark:text-gray-500 font-bold text-sm">{r}</div>
                     
                     {/* Slots in Row */}
                     <div className="grid grid-cols-8 gap-2 flex-1">
@@ -340,7 +342,7 @@ export default function WarehouseDashboard() {
                           )}
                         >
                           {/* Slot Code (Top Left) */}
-                          <div className="absolute top-1 left-1.5 text-[10px] font-mono font-bold text-white/70 group-hover:text-white">
+                          <div className="absolute top-1 left-1.5 text-[10px] font-mono font-bold text-gray-800 dark:text-white/90/70 group-hover:text-gray-800 dark:text-white/90">
                             {slot.slot_code}
                           </div>
                           
@@ -354,12 +356,12 @@ export default function WarehouseDashboard() {
                           {/* Content (Center) */}
                           {slot.is_occupied ? (
                             <div className="flex flex-col items-center justify-center mt-2">
-                              <PackageCheck className="w-5 h-5 text-white/90 mb-0.5" />
-                              <div className="text-xs font-mono font-bold text-white">{slot.lots?.lot_number}</div>
+                              
+                              <div className="text-xs font-mono font-bold text-gray-800 dark:text-white/90">{slot.lots?.lot_number}</div>
                             </div>
                           ) : (
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2">
-                              <span className="text-xs font-medium text-white/80">+ Assign</span>
+                              <span className="text-xs font-medium text-gray-800 dark:text-white/90/80">+ Assign</span>
                             </div>
                           )}
                           
@@ -384,21 +386,21 @@ export default function WarehouseDashboard() {
       {selectedSlot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} />
-          <div className="relative glass-card w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
-            <button onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-5 h-5" />
+          <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
+            <button onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
+              
             </button>
             
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-700/50">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-800/50">
               <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border", TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.bg.replace('bg-', 'bg-').concat('/20'), TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.border.replace('border-', 'border-').concat('/50'))}>
                 <span className={cn("font-mono font-bold text-xl", TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.text)}>
                   {selectedSlot.slot_code}
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Detail Slot Gudang</h3>
-                <p className="text-slate-400 text-sm flex items-center gap-1.5">
-                  <Thermometer className="w-3.5 h-3.5" />
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Detail Slot Gudang</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-1.5">
+                  
                   {TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.label}
                 </p>
               </div>
@@ -407,25 +409,25 @@ export default function WarehouseDashboard() {
             {selectedSlot.is_occupied ? (
               /* Occupied Slot View */
               <div className="space-y-4">
-                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                  <div className="text-xs text-slate-400 mb-1">Lot Number</div>
-                  <div className="text-xl font-mono font-bold text-white mb-3">{selectedSlot.lots?.lot_number}</div>
+                <div className="bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lot Number</div>
+                  <div className="text-xl font-mono font-bold text-gray-800 dark:text-white/90 mb-3">{selectedSlot.lots?.lot_number}</div>
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <div className="text-slate-500 mb-0.5">Material</div>
-                      <div className="text-white truncate">{selectedSlot.lots?.incoming_materials?.material_name}</div>
+                      <div className="text-gray-400 dark:text-gray-500 mb-0.5">Material</div>
+                      <div className="text-gray-800 dark:text-white/90 truncate">{selectedSlot.lots?.incoming_materials?.material_name}</div>
                     </div>
                     <div>
-                      <div className="text-slate-500 mb-0.5">QC Status</div>
-                      <div className="text-green-400 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5"/> Approved</div>
+                      <div className="text-gray-400 dark:text-gray-500 mb-0.5">QC Status</div>
+                      <div className="text-green-400 flex items-center gap-1"> Approved</div>
                     </div>
                   </div>
                 </div>
 
                 {mismatches.find(m => m.id === selectedSlot.id) && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    
                     <div className="text-sm text-red-400">
                       <strong>Mismatch Suhu!</strong> Material ini memerlukan {TEMP_ZONE_CONFIG[getRequiredTemp(selectedSlot.lots?.incoming_materials?.material_name)]?.label}.
                     </div>
@@ -446,15 +448,15 @@ export default function WarehouseDashboard() {
             ) : (
               /* Empty Slot View (Assignment) */
               <div className="space-y-4">
-                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Assign Lot ke Slot Ini</label>
+                <div className="bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Lot ke Slot Ini</label>
                   {availableLots.length === 0 ? (
-                    <div className="text-sm text-slate-500 italic py-2">Tidak ada lot yang siap dimasukkan ke gudang.</div>
+                    <div className="text-sm text-gray-400 dark:text-gray-500 italic py-2">Tidak ada lot yang siap dimasukkan ke gudang.</div>
                   ) : (
                     <select 
                       value={assignLotId} 
                       onChange={(e) => setAssignLotId(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                      className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-slate-600 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
                     >
                       <option value="">-- Pilih Lot --</option>
                       {availableLots.map(lot => (
@@ -468,7 +470,7 @@ export default function WarehouseDashboard() {
 
                 {showTempWarning && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2 animate-in slide-in-from-top-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+                    
                     <div className="text-sm text-yellow-400">
                       <strong>Peringatan Suhu:</strong> Lot ini idealnya disimpan di <strong>{TEMP_ZONE_CONFIG[selectedLotTempReq]?.label}</strong>. Slot ini adalah {TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.label}.
                     </div>
@@ -478,10 +480,10 @@ export default function WarehouseDashboard() {
                 <button 
                   onClick={handleAssignLot} 
                   disabled={!assignLotId || saving}
-                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Konfirmasi Penempatan
-                  <ArrowRight className="w-4 h-4" />
+                  
                 </button>
               </div>
             )}

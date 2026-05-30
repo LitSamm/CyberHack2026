@@ -23,23 +23,23 @@ export function formatDateTime(dateString: string | null | undefined): string {
 
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    approved: 'bg-green-500/20 text-green-400 border-green-500/30',
-    rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
-    queued: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
-    in_production: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    completed: 'bg-green-500/20 text-green-400 border-green-500/30',
-    dispatched: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    prepared: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    shipped: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    delivered: 'bg-green-500/20 text-green-400 border-green-500/30',
-    pass: 'bg-green-500/20 text-green-400 border-green-500/30',
-    fail: 'bg-red-500/20 text-red-400 border-red-500/30',
-    urgent: 'bg-red-500/20 text-red-400 border-red-500/30',
-    normal: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    low: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    pending: 'bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-500',
+    approved: 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500',
+    rejected: 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-500',
+    queued: 'bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-500',
+    in_production: 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-500',
+    completed: 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500',
+    dispatched: 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-500',
+    prepared: 'bg-warning-50 text-warning-600 dark:bg-warning-500/10 dark:text-warning-500',
+    shipped: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-500',
+    delivered: 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500',
+    pass: 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500',
+    fail: 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-500',
+    urgent: 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-500',
+    normal: 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-500',
+    low: 'bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-500',
   };
-  return map[status] || 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+  return map[status] || 'bg-gray-50 text-gray-600 dark:bg-gray-500/10 dark:text-gray-500';
 }
 
 export function getStatusLabel(status: string): string {

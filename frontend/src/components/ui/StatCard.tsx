@@ -1,13 +1,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import React from 'react';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: LucideIcon;
+  icon?: React.ElementType;
   trend?: { value: number; label: string };
   color?: 'orange' | 'blue' | 'green' | 'purple' | 'red';
   loading?: boolean;
@@ -46,34 +46,34 @@ export default function StatCard({ title, value, subtitle, icon: Icon, trend, co
 
   if (loading) {
     return (
-      <div className="glass-card stat-card p-5">
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 animate-pulse">
         <div className="flex items-start justify-between mb-4">
-          <div className="skeleton w-10 h-10 rounded-xl" />
-          <div className="skeleton w-16 h-5 rounded" />
+          <div className="w-11 h-11 rounded-xl bg-gray-200 dark:bg-gray-800" />
+          <div className="w-16 h-5 rounded-full bg-gray-200 dark:bg-gray-800" />
         </div>
-        <div className="skeleton w-20 h-8 rounded mb-2" />
-        <div className="skeleton w-32 h-4 rounded" />
+        <div className="w-20 h-8 rounded bg-gray-200 dark:bg-gray-800 mb-2" />
+        <div className="w-32 h-4 rounded bg-gray-200 dark:bg-gray-800" />
       </div>
     );
   }
 
   return (
-    <div className={cn('glass-card stat-card p-5 border', colors.border, 'hover:border-opacity-40 transition-all duration-200')}>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 hover:shadow-theme-sm transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', colors.icon)}>
-          <Icon className="w-5 h-5" />
-        </div>
+        {/* Ikon dihapus sesuai permintaan agar desain lebih bersih */}
         {trend && (
-          <div className={cn('text-xs px-2 py-1 rounded-full font-medium',
-            trend.value >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+          <div className={cn('inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium',
+            trend.value >= 0 ? 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-500' : 'bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-500'
           )}>
             {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
           </div>
         )}
       </div>
-      <div className={cn('text-2xl font-bold mb-1', colors.value)}>{value}</div>
-      <div className="text-slate-300 text-sm font-medium">{title}</div>
-      {subtitle && <div className="text-slate-500 text-xs mt-1">{subtitle}</div>}
+      <div>
+        <h4 className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h4>
+        <h3 className="mt-1 text-2xl font-bold text-gray-800 dark:text-white/90">{value}</h3>
+      </div>
+      {subtitle && <div className="text-gray-400 dark:text-gray-500 text-xs mt-2">{subtitle}</div>}
     </div>
   );
 }

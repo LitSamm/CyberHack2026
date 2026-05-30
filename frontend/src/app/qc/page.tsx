@@ -8,7 +8,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseQcApi, supabaseLotsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
 import { formatDate, formatDateTime } from '@/lib/utils';
-import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Cpu, UploadCloud, Camera, Download } from 'lucide-react';
+import { TimeIcon, BoxIcon, CheckCircleIcon, CloseIcon, DownloadIcon, BoltIcon, InfoIcon, DocsIcon, VideoIcon } from '@/icons';
 import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 
@@ -215,7 +215,7 @@ export default function QCDashboard() {
   const GradeSlider = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
     <div>
       <div className="flex justify-between mb-1.5">
-        <label className="text-sm text-slate-300">{label}</label>
+        <label className="text-sm text-gray-700 dark:text-gray-300">{label}</label>
         <span className={`text-sm font-bold ${value >= 4 ? 'text-green-400' : value === 3 ? 'text-yellow-400' : 'text-red-400'}`}>
           {value}/5
         </span>
@@ -233,14 +233,14 @@ export default function QCDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">QC Dashboard</h1>
-            <p className="text-slate-400 text-sm mt-1">Pemeriksaan kualitas material dan lot</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">QC Dashboard</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Pemeriksaan kualitas material dan lot</p>
           </div>
           <button 
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
           >
-            <Download className="w-4 h-4 text-orange-500" />
+            
             Export Laporan QC
           </button>
         </div>
@@ -248,7 +248,7 @@ export default function QCDashboard() {
         {/* Overdue Alert Banner */}
         {overdueAlerts.length > 0 && (
           <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            
             <div>
               <div className="text-yellow-400 font-semibold text-sm">
                 ⚠️ {overdueAlerts.length} Material Menunggu QC {'>'} 24 Jam!
@@ -263,44 +263,44 @@ export default function QCDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard title="Menunggu QC" value={pendingMaterials.length}
-            subtitle="Material belum diperiksa" icon={Clock} color="orange" loading={loading} />
+            subtitle="Material belum diperiksa" icon={TimeIcon} color="orange" loading={loading} />
           <StatCard title="Selesai Hari Ini" value={todayChecks.length}
-            subtitle="Total pemeriksaan" icon={FlaskConical} color="blue" loading={loading} />
+            subtitle="Total pemeriksaan" icon={BoxIcon} color="blue" loading={loading} />
           <StatCard title="Pass Rate Hari Ini" value={`${passRate}%`}
-            subtitle={`${todayChecks.filter(c => c.result === 'pass').length} lulus dari ${todayChecks.length}`}
-            icon={CheckCircle} color="green" loading={loading} />
+            subtitle={`${todayChecks.filter(c => c.result === 'pass').length} lulus dari ${todayChecks.length}`} icon={CheckCircleIcon} color="green" loading={loading} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Pending Queue */}
-          <div className="glass-card p-5">
-            <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-orange-400" />
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-5">
+            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">IoT Sensor Data (Prediksi)</h4>
+            <h2 className="text-base font-semibold text-gray-800 dark:text-white/90 mb-4 flex items-center gap-2">
+              
               Antrian QC ({pendingMaterials.length})
             </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
               {loading ? Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="skeleton h-16 rounded-lg" />
               )) : pendingMaterials.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                  
                   <p>Semua material sudah diperiksa</p>
                 </div>
               ) : pendingMaterials.map(mat => (
-                <div key={mat.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700 hover:border-orange-500/30 transition-colors gap-3">
+                <div key={mat.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-100 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-orange-500/30 transition-colors gap-3">
                   <div className="min-w-0">
-                    <div className="text-white text-sm font-medium truncate">{mat.material_name}</div>
-                    <div className="text-slate-500 text-xs">{mat.suppliers?.name} • {mat.quantity} {mat.unit}</div>
+                    <div className="text-gray-800 dark:text-white/90 text-sm font-medium truncate">{mat.material_name}</div>
+                    <div className="text-gray-400 dark:text-gray-500 text-xs">{mat.suppliers?.name} • {mat.quantity} {mat.unit}</div>
                     <div className="text-slate-600 text-xs">{formatDate(mat.received_date)}</div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={() => openAiModal(mat)}
                       className="px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs rounded-lg font-medium transition-colors flex items-center gap-1.5">
-                      <Cpu className="w-3.5 h-3.5" />
+                      
                       Scan AI
                     </button>
                     <button onClick={() => openQCForm(mat)}
-                      className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-lg font-medium transition-colors">
+                      className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 text-xs rounded-lg font-medium transition-colors">
                       Periksa
                     </button>
                   </div>
@@ -310,27 +310,27 @@ export default function QCDashboard() {
           </div>
 
           {/* Today's Completed */}
-          <div className="glass-card p-5">
-            <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-5">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-white/90 mb-4 flex items-center gap-2">
+              
               Selesai Hari Ini ({todayChecks.length})
             </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
               {loading ? Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="skeleton h-16 rounded-lg" />
               )) : todayChecks.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+                  
                   <p>Belum ada pemeriksaan hari ini</p>
                 </div>
               ) : todayChecks.map(check => (
-                <div key={check.id} className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                <div key={check.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-800">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="text-white text-sm font-medium font-mono">{check.lots?.lot_number}</div>
-                      {check.ai_used && <Cpu className="w-3 h-3 text-indigo-400" title="Dibantu AI" />}
+                      <div className="text-gray-800 dark:text-white/90 text-sm font-medium font-mono">{check.lots?.lot_number}</div>
+                      {check.ai_used && <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded uppercase">AI</span>}
                     </div>
-                    <div className="text-slate-500 text-xs">
+                    <div className="text-gray-400 dark:text-gray-500 text-xs">
                       Warna: {check.color_grade}/5 • Konsistensi: {check.consistency_grade}/5
                     </div>
                     <div className="text-slate-600 text-xs">{check.users?.name} • {formatDateTime(check.checked_at)}</div>
@@ -347,17 +347,17 @@ export default function QCDashboard() {
       {showQCForm && selectedLot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQCForm(false)} />
-          <div className="relative glass-card w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
+          <div className="relative rounded-2xl border border-gray-200 dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
+              
             </button>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                <FlaskConical className="w-5 h-5 text-orange-400" />
+                
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Form QC Pemeriksaan</h3>
-                <p className="text-slate-400 text-sm">{selectedLot.material_name}</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Form QC Pemeriksaan</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{selectedLot.material_name}</p>
               </div>
             </div>
 
@@ -369,7 +369,7 @@ export default function QCDashboard() {
 
             {formData.ai_used && (
               <div className="mb-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg flex gap-2 items-start">
-                <Cpu className="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0" />
+                
                 <div className="text-sm text-indigo-300">
                   Data form telah diisi otomatis berdasarkan hasil AI dengan confidence <strong>{formData.ai_confidence}%</strong>. Anda bisa mengubahnya jika tidak sesuai.
                 </div>
@@ -382,8 +382,8 @@ export default function QCDashboard() {
               <GradeSlider label="Grade Konsistensi" value={formData.consistency_grade}
                 onChange={v => setFormData(p => ({ ...p, consistency_grade: v }))} />
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
-                <label className="text-sm text-slate-300">Kontaminasi Terdeteksi</label>
+              <div className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-800">
+                <label className="text-sm text-gray-700 dark:text-gray-300">Kontaminasi Terdeteksi</label>
                 <button onClick={() => setFormData(p => ({ ...p, contamination_flag: !p.contamination_flag }))}
                   className={`relative w-11 h-6 rounded-full transition-colors ${formData.contamination_flag ? 'bg-red-500' : 'bg-slate-600'}`}>
                   <div className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform ${formData.contamination_flag ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -391,21 +391,21 @@ export default function QCDashboard() {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Catatan</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label>
                 <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
                   rows={3} placeholder="Catatan tambahan..."
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm resize-none focus:border-orange-500" />
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm resize-none focus:border-orange-500" />
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setConfirmReject(true)} disabled={saving || !selectedLot.lot}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-40">
-                  <XCircle className="w-4 h-4" />
+                  
                   Tolak
                 </button>
                 <button onClick={() => submitQCDirect('pass')} disabled={saving || !selectedLot.lot}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-40">
-                  <CheckCircle className="w-4 h-4" />
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-40">
+                  
                   {saving ? 'Memproses...' : 'Setujui'}
                 </button>
               </div>
@@ -429,18 +429,18 @@ export default function QCDashboard() {
       {showAiModal && selectedLot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAiModal(false)} />
-          <div className="relative glass-card w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowAiModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
+          <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 lg:p-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white/90">Hasil Pemeriksaan QC</h2>
+              <button onClick={() => setShowAiModal(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                
+              </button>
+            </div>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center">
-                <Cpu className="w-5 h-5 text-indigo-400" />
+                
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">Analisis AI: {selectedLot.material_name}</h3>
-                <p className="text-slate-400 text-sm">Gunakan model Computer Vision untuk mendeteksi kualitas.</p>
-              </div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Gunakan model Computer Vision untuk mendeteksi kualitas.</p>
             </div>
 
             <div className="space-y-4">
@@ -448,25 +448,25 @@ export default function QCDashboard() {
               {!aiPreviewUrl ? (
                 <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center text-center">
                   <div className="flex gap-4 mb-4">
-                    <button onClick={() => fileInputRef.current?.click()} className="p-3 bg-slate-800 rounded-full hover:bg-slate-700 hover:text-orange-400 transition-colors">
-                      <UploadCloud className="w-6 h-6 text-slate-300" />
+                    <button onClick={() => fileInputRef.current?.click()} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-orange-400 transition-colors">
+                      
                     </button>
-                    <button onClick={() => cameraInputRef.current?.click()} className="p-3 bg-slate-800 rounded-full hover:bg-slate-700 hover:text-orange-400 transition-colors">
-                      <Camera className="w-6 h-6 text-slate-300" />
+                    <button onClick={() => cameraInputRef.current?.click()} className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-orange-400 transition-colors">
+                      
                     </button>
                   </div>
-                  <p className="text-sm text-slate-300 mb-1">Pilih foto atau ambil gambar dari kamera</p>
-                  <p className="text-xs text-slate-500">Mendukung format JPG, PNG</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Pilih foto atau ambil gambar dari kamera</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Mendukung format JPG, PNG</p>
                   
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAiFileSelect} />
                   <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleAiFileSelect} />
                 </div>
               ) : (
-                <div className="relative rounded-xl overflow-hidden border border-slate-700 bg-black/50">
+                <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-black/50">
                   <img src={aiPreviewUrl} alt="Preview" className="w-full max-h-64 object-contain" />
                   {!aiAnalyzing && !aiResults && (
-                    <button onClick={() => { setAiFile(null); setAiPreviewUrl(null); }} className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg hover:bg-red-500/50 text-white transition-colors">
-                      <X className="w-4 h-4" />
+                    <button onClick={() => { setAiFile(null); setAiPreviewUrl(null); }} className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg hover:bg-red-500/50 text-gray-800 dark:text-white/90 transition-colors">
+                      
                     </button>
                   )}
                 </div>
@@ -475,7 +475,7 @@ export default function QCDashboard() {
               {/* Action Button */}
               {!aiResults && aiPreviewUrl && (
                 <button onClick={analyzeImage} disabled={aiAnalyzing}
-                  className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {aiAnalyzing ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -483,7 +483,7 @@ export default function QCDashboard() {
                     </>
                   ) : (
                     <>
-                      <Cpu className="w-4 h-4" />
+                      
                       Mulai Analisis
                     </>
                   )}
@@ -492,46 +492,46 @@ export default function QCDashboard() {
 
               {/* Results Card */}
               {aiResults && (
-                <div className="bg-slate-800/80 border border-indigo-500/30 rounded-xl p-4 space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-700">
-                    <h4 className="font-medium text-white flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
+                <div className="bg-gray-100 dark:bg-gray-800/80 border border-indigo-500/30 rounded-xl p-4 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
+                    <h4 className="font-medium text-gray-800 dark:text-white/90 flex items-center gap-2">
+                      
                       Hasil Deteksi
                     </h4>
-                    <span className="text-xs font-semibold px-2 py-1 bg-slate-700 rounded-md text-slate-300">
+                    <span className="text-xs font-semibold px-2 py-1 bg-slate-700 rounded-md text-gray-700 dark:text-gray-300">
                       {aiResults.confidence}% Akurat
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">Color Grade</div>
-                      <div className="text-lg font-bold text-white">{aiResults.color_grade}<span className="text-slate-500 text-sm">/5</span></div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Color Grade</div>
+                      <div className="text-lg font-bold text-gray-800 dark:text-white/90">{aiResults.color_grade}<span className="text-gray-400 dark:text-gray-500 text-sm">/5</span></div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">Consistency</div>
-                      <div className="text-lg font-bold text-white">{aiResults.consistency_grade}<span className="text-slate-500 text-sm">/5</span></div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Consistency</div>
+                      <div className="text-lg font-bold text-gray-800 dark:text-white/90">{aiResults.consistency_grade}<span className="text-gray-400 dark:text-gray-500 text-sm">/5</span></div>
                     </div>
                   </div>
 
                   {aiResults.contamination_detected && (
                     <div className="flex items-center gap-2 text-red-400 bg-red-500/10 p-2 rounded-lg text-sm">
-                      <AlertTriangle className="w-4 h-4" />
+                      
                       Kontaminasi Terdeteksi!
                     </div>
                   )}
 
                   {aiResults.defects?.length > 0 && (
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">Defects Found:</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Defects Found:</div>
                       <ul className="list-disc list-inside text-xs text-yellow-300">
                         {aiResults.defects.map((d: string, i: number) => <li key={i}>{d}</li>)}
                       </ul>
                     </div>
                   )}
 
-                  <div className="pt-3 border-t border-slate-700 flex items-center justify-between">
-                    <div className="text-xs text-slate-400">Rekomendasi AI:</div>
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Rekomendasi AI:</div>
                     <StatusBadge status={
                       aiResults.recommendation === 'approve' ? 'completed' : 
                       aiResults.recommendation === 'reject' ? 'rejected' : 'queued'
@@ -539,7 +539,7 @@ export default function QCDashboard() {
                   </div>
 
                   <button onClick={applyAiToForm}
-                    className="w-full mt-2 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+                    className="w-full mt-2 py-3 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
                     Terapkan ke Form QC
                   </button>
                 </div>

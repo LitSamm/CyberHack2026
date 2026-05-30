@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+
+import { BellIcon, TimeIcon, CheckCircleIcon, InfoIcon, AlertIcon } from '@/icons';
 import { useRouter } from 'next/navigation';
-import { Bell, Clock, PackageCheck, ThermometerSnowflake, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { supabaseNotificationsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
@@ -43,13 +45,13 @@ export default function NotificationBell() {
             const newNotif = payload.new;
             setNotifications((prev) => [newNotif, ...prev]);
             toast.custom((t) => (
-              <div className={cn("bg-slate-800 border border-slate-700 p-4 flex gap-3 rounded-xl shadow-lg", t.visible ? "animate-enter" : "animate-leave")}>
+              <div className={cn("bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 p-4 flex gap-3 rounded-xl shadow-lg", t.visible ? "animate-enter" : "animate-leave")}>
                 <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                  <Bell className="w-4 h-4 text-blue-400" />
+                  <BellIcon />
                 </div>
                 <div>
-                  <p className="text-white font-medium text-sm">{newNotif.title}</p>
-                  <p className="text-slate-400 text-xs mt-0.5">{newNotif.message}</p>
+                  <p className="text-gray-800 dark:text-white/90 font-medium text-sm">{newNotif.title}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{newNotif.message}</p>
                 </div>
               </div>
             ));
@@ -114,11 +116,11 @@ export default function NotificationBell() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'qc_overdue': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'lot_urgent': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'cold_mismatch': return <ThermometerSnowflake className="w-4 h-4 text-cyan-400" />;
-      case 'dispatch_ready': return <PackageCheck className="w-4 h-4 text-green-500" />;
-      default: return <Info className="w-4 h-4 text-blue-500" />;
+      case 'qc_overdue': return <TimeIcon />;
+      case 'lot_urgent': return <AlertIcon />;
+      case 'cold_mismatch': return <InfoIcon />;
+      case 'dispatch_ready': return <CheckCircleIcon />;
+      default: return <InfoIcon />;
     }
   };
 
@@ -126,30 +128,30 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition-colors relative"
+        className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
       >
-        <Bell className="w-5 h-5 text-slate-400" />
+        <BellIcon />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-2 border-slate-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 border-2 border-slate-900 text-gray-800 dark:text-white/90 text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700 shadow-2xl rounded-2xl overflow-hidden z-50 flex flex-col max-h-[85vh]">
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 backdrop-blur shrink-0">
-            <h3 className="font-semibold text-white">Notifikasi</h3>
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl rounded-2xl overflow-hidden z-50 flex flex-col max-h-[85vh]">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900/90 backdrop-blur shrink-0">
+            <h3 className="font-semibold text-gray-800 dark:text-white/90">Notifikasi</h3>
             {unreadCount > 0 && (
               <button onClick={markAllRead} className="text-xs text-orange-500 hover:text-orange-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Tandai dibaca
+                <CheckCircleIcon /> Tandai dibaca
               </button>
             )}
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 text-sm">
+              <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
                 Belum ada notifikasi
               </div>
             ) : (
@@ -159,24 +161,24 @@ export default function NotificationBell() {
                     key={notif.id}
                     onClick={() => handleNotificationClick(notif)}
                     className={cn(
-                      "w-full text-left p-4 hover:bg-slate-800/50 transition-colors flex items-start gap-3 relative",
-                      !notif.is_read ? "bg-slate-800/20" : ""
+                      "w-full text-left p-4 hover:bg-gray-100 dark:bg-gray-800/50 transition-colors flex items-start gap-3 relative",
+                      !notif.is_read ? "bg-gray-100 dark:bg-gray-800/20" : ""
                     )}
                   >
                     {!notif.is_read && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
                     )}
-                    <div className={cn("p-2 rounded-lg bg-slate-800", !notif.is_read ? "bg-slate-700" : "")}>
+                    <div className={cn("p-2 rounded-lg bg-gray-100 dark:bg-gray-800", !notif.is_read ? "bg-slate-700" : "")}>
                       {getIcon(notif.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={cn("text-sm font-medium text-white truncate", !notif.is_read ? "font-semibold" : "")}>
+                      <p className={cn("text-sm font-medium text-gray-800 dark:text-white/90 truncate", !notif.is_read ? "font-semibold" : "")}>
                         {notif.title}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                         {notif.message}
                       </p>
-                      <p className="text-[10px] text-slate-500 mt-2">
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2">
                         {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: localeId })}
                       </p>
                     </div>
@@ -186,11 +188,11 @@ export default function NotificationBell() {
             )}
           </div>
 
-          <div className="p-3 border-t border-slate-800 bg-slate-900 shrink-0">
+          <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
             <Link 
               href="/notifications"
               onClick={() => setIsOpen(false)}
-              className="block w-full text-center text-sm text-slate-400 hover:text-white transition-colors py-2"
+              className="block w-full text-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90 transition-colors py-2"
             >
               Lihat semua notifikasi
             </Link>

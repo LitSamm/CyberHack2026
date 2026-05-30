@@ -22,9 +22,9 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center bg-[#0A0F1C]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center animate-pulse">
-          <span className="text-white text-xl font-bold">A</span>
+          <span className="text-gray-800 dark:text-white/90 text-xl font-bold">A</span>
         </div>
-        <p className="text-slate-400 text-sm">Memuat AromOS...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Memuat AromOS...</p>
       </div>
     </div>
   );

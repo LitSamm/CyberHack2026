@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+
+import { UserIcon, GridIcon, PencilIcon, CloseIcon, CheckLineIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { usersApi } from '@/lib/api';
 import { formatDate, getRoleLabel } from '@/lib/utils';
-import { UserPlus, Search, Edit2, UserX, X, Check } from 'lucide-react';
+
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -93,80 +95,80 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Manajemen User</h1>
-            <p className="text-slate-400 text-sm mt-1">{users.length} total pengguna terdaftar</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">Manajemen User</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{users.length} total pengguna terdaftar</p>
           </div>
           <button onClick={() => { setEditUser(null); setFormData({ name: '', email: '', password: '', role: 'qc' }); setShowForm(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
-            <UserPlus className="w-4 h-4" />
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
+            
             Tambah User
           </button>
         </div>
 
         {/* Filters */}
-        <div className="glass-card p-4 flex flex-wrap gap-3">
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Cari nama atau email..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500" />
+              className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 placeholder-slate-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500" />
           </div>
           <select value={filterRole} onChange={e => setFilterRole(e.target.value)}
-            className="px-3 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white focus:border-orange-500">
+            className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500">
             <option value="">Semua Role</option>
             {ROLES.map(r => <option key={r} value={r}>{getRoleLabel(r)}</option>)}
           </select>
         </div>
 
         {/* Users Table */}
-        <div className="glass-card overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800/30">
+              <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/30">
                 {['Nama', 'Email', 'Role', 'Status', 'Terdaftar', 'Aksi'].map(h => (
-                  <th key={h} className="text-left text-xs text-slate-500 font-semibold py-3 px-4 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left text-xs text-gray-400 dark:text-gray-500 font-semibold py-3 px-4 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-800/50">
+                  <tr key={i} className="border-b border-gray-200 dark:border-gray-800/50">
                     {Array.from({ length: 6 }).map((_, j) => (
                       <td key={j} className="py-3 px-4"><div className="skeleton h-4 rounded" /></td>
                     ))}
                   </tr>
                 ))
               ) : filtered.map(user => (
-                <tr key={user.id} className="border-b border-slate-800/50 table-row-hover">
+                <tr key={user.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-bold">{user.name.charAt(0)}</span>
+                        <span className="text-gray-800 dark:text-white/90 text-xs font-bold">{user.name.charAt(0)}</span>
                       </div>
-                      <span className="text-white font-medium">{user.name}</span>
+                      <span className="text-gray-800 dark:text-white/90 font-medium">{user.name}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-slate-400">{user.email}</td>
+                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400">{user.email}</td>
                   <td className="py-3 px-4">
                     <span className={cn('badge text-xs', ROLE_COLORS[user.role])}>{getRoleLabel(user.role)}</span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className={cn('badge text-xs', user.is_active ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-slate-500/20 text-slate-400 border-slate-500/30')}>
+                    <span className={cn('badge text-xs', user.is_active ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-slate-500/20 text-gray-500 dark:text-gray-400 border-slate-500/30')}>
                       {user.is_active ? 'Aktif' : 'Nonaktif'}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(user.created_at)}</td>
+                  <td className="py-3 px-4 text-gray-400 dark:text-gray-500 text-xs">{formatDate(user.created_at)}</td>
                   <td className="py-3 px-4">
                     <div className="flex gap-2">
                       <button onClick={() => openEdit(user)}
-                        className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors">
-                        <Edit2 className="w-3.5 h-3.5" />
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+                        
                       </button>
                       {user.is_active && (
                         <button onClick={() => setConfirmDeactivate(user.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors">
-                          <UserX className="w-3.5 h-3.5" />
+                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors">
+                          
                         </button>
                       )}
                     </div>
@@ -176,7 +178,7 @@ export default function UsersPage() {
             </tbody>
           </table>
           {!loading && filtered.length === 0 && (
-            <div className="text-center py-12 text-slate-500">Tidak ada user ditemukan</div>
+            <div className="text-center py-12 text-gray-400 dark:text-gray-500">Tidak ada user ditemukan</div>
           )}
         </div>
       </div>
@@ -185,45 +187,45 @@ export default function UsersPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          <div className="relative glass-card w-full max-w-md p-6">
-            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
+          <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6">
+            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
+              
             </button>
-            <h3 className="text-lg font-semibold text-white mb-5">{editUser ? 'Edit User' : 'Tambah User Baru'}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">{editUser ? 'Edit User' : 'Tambah User Baru'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Nama Lengkap</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap</label>
                 <input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} required
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500" />
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500" />
               </div>
               {!editUser && (
                 <>
                   <div>
-                    <label className="block text-sm text-slate-300 mb-1.5">Email</label>
+                    <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                     <input type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} required
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500" />
+                      className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500" />
                   </div>
                   <div>
-                    <label className="block text-sm text-slate-300 mb-1.5">Password</label>
+                    <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
                     <input type="password" value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} required
-                      className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500" />
+                      className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500" />
                   </div>
                 </>
               )}
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Role</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Role</label>
                 <select value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500">
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500">
                   {ROLES.map(r => <option key={r} value={r}>{getRoleLabel(r)}</option>)}
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-lg text-sm transition-colors">
+                  className="flex-1 py-2.5 border border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm transition-colors">
                   Batal
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>

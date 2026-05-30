@@ -3,9 +3,11 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Sidebar from './Sidebar';
-import TopBar from './TopBar';
 import ChatAssistant from '@/components/ui/ChatAssistant';
+import AppSidebar from '@/layout/AppSidebar';
+import AppHeader from '@/layout/AppHeader';
+import Backdrop from '@/layout/Backdrop';
+import { useSidebar } from '@/context/SidebarContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, allowedRoles, onRefresh }: DashboardLayoutProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   useEffect(() => {
     if (!loading) {
@@ -46,12 +49,21 @@ export default function DashboardLayout({ children, allowedRoles, onRefresh }: D
 
   if (!user) return null;
 
+  const mainContentMargin = isMobileOpen
+    ? "ml-0"
+    : isExpanded || isHovered
+    ? "lg:ml-[290px]"
+    : "lg:ml-[90px]";
+
   return (
-    <div className="flex min-h-screen bg-[#0A0F1C]">
-      <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <TopBar onRefresh={onRefresh} />
-        <main className="flex-1 p-6 overflow-auto">
+    <div className="min-h-screen xl:flex dark:bg-gray-900 bg-gray-50 text-gray-900 dark:text-gray-100">
+      <AppSidebar />
+      <Backdrop />
+      <div
+        className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin} flex flex-col min-h-screen`}
+      >
+        <AppHeader onRefresh={onRefresh} />
+        <main className="flex-1 p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6 overflow-auto">
           {children}
         </main>
       </div>
