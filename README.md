@@ -42,6 +42,10 @@ npm install
 # Install backend dependencies
 cd ../backend
 npm install
+
+# Install AI camera receiving service dependencies
+cd ../cv-service
+python -m pip install -r requirements.txt
 ```
 
 ### 2. Setup Supabase
@@ -62,6 +66,7 @@ npm install
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_CV_SERVICE_URL=http://localhost:8000
 ```
 
 **Backend** — buat file `backend/.env`:
@@ -99,6 +104,10 @@ npm run dev
 # Terminal 2 — Frontend
 cd frontend
 npm run dev
+
+# Terminal 3 — AI Camera Receiving Service
+cd cv-service
+python cv_server.py
 ```
 
 Buka http://localhost:3000

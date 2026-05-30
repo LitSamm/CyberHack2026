@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS public.lots (
 CREATE TABLE IF NOT EXISTS public.qc_checks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   lot_id UUID REFERENCES public.lots(id) ON DELETE CASCADE,
+  material_id UUID REFERENCES public.incoming_materials(id) ON DELETE CASCADE,
   checked_by UUID REFERENCES public.users(id),
   color_grade INTEGER CHECK (color_grade BETWEEN 1 AND 5),
   consistency_grade INTEGER CHECK (consistency_grade BETWEEN 1 AND 5),
@@ -77,7 +78,8 @@ CREATE TABLE IF NOT EXISTS public.qc_checks (
   ai_contamination_flag BOOLEAN,
   ai_confidence NUMERIC,
   ai_recommendation TEXT CHECK (ai_recommendation IN ('approve', 'review', 'reject')),
-  ai_used BOOLEAN DEFAULT FALSE
+  ai_used BOOLEAN DEFAULT FALSE,
+  CONSTRAINT qc_checks_exactly_one_subject CHECK ((material_id IS NOT NULL) <> (lot_id IS NOT NULL))
 );
 
 -- =============================================

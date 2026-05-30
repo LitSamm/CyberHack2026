@@ -5,13 +5,22 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/ui/StatCard';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { formatDateTime } from '@/lib/utils';
-import { supabaseDashboardApi, supabaseLotsApi } from '@/lib/supabase-api';
+import {
+  supabaseDashboardApi,
+  supabaseLotsApi,
+  supabaseMaterialsApi,
+  supabaseQcApi,
+  supabaseWarehouseApi,
+  supabaseDispatchApi,
+} from '@/lib/supabase-api';
+import { buildOperationsPipeline, getSevenDayProductionQcChart } from '@/lib/workflowDomain.js';
 import {
   BoxIcon, CheckCircleIcon, TimeIcon, BoxCubeIcon,
   GridIcon, ArrowUpIcon, DownloadIcon, DocsIcon, FileIcon, ChevronDownIcon
 } from '@/icons';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ExportModal, { ReportType } from '@/components/ui/ExportModal';
+import { Activity } from 'lucide-react';
 
 interface Stats {
   lots_today: number;
@@ -33,6 +42,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [recentLots, setRecentLots] = useState<any[]>([]);
+  const [pipeline, setPipeline] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Export Modal State
@@ -50,14 +61,28 @@ export default function AdminDashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsData, actData, lotsData] = await Promise.all([
+      const [statsData, actData, lotsData, materialsData, qcData, slotsData, dispatchData] = await Promise.all([
         supabaseDashboardApi.getStats(),
         supabaseDashboardApi.getRecentActivity(),
         supabaseLotsApi.getAll(),
+        supabaseMaterialsApi.getAll(),
+        supabaseQcApi.getAll(),
+        supabaseWarehouseApi.getSlots(),
+        supabaseDispatchApi.getAll(),
       ]);
       setStats(statsData as Stats);
       setActivity(actData as ActivityItem[]);
       setRecentLots((lotsData as any[]).slice(0, 8));
+      setPipeline(buildOperationsPipeline({
+        materials: materialsData as any[],
+        lots: lotsData as any[],
+        slots: slotsData as any[],
+        dispatches: dispatchData as any[],
+      }));
+      setChartData(getSevenDayProductionQcChart({
+        lots: lotsData as any[],
+        qcChecks: qcData as any[],
+      }));
     } catch (err) {
       console.error('Failed to load dashboard:', err);
     } finally {
@@ -71,15 +96,15 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const chartData = [
-    { name: 'Sen', lots: 4, qc: 3 },
-    { name: 'Sel', lots: 7, qc: 6 },
-    { name: 'Rab', lots: 5, qc: 5 },
-    { name: 'Kam', lots: 9, qc: 8 },
-    { name: 'Jum', lots: 6, qc: 5 },
-    { name: 'Sab', lots: 3, qc: 3 },
-    { name: 'Min', lots: 2, qc: 2 },
-  ];
+  const toneClasses: Record<string, string> = {
+    yellow: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400',
+    green: 'border-green-500/30 bg-green-500/10 text-green-400',
+    slate: 'border-slate-500/30 bg-slate-500/10 text-slate-300',
+    blue: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
+    orange: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
+    purple: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
+    cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+  };
 
   const getActionLabel = (action: string, table: string) => {
     const actions: Record<string, string> = {
@@ -148,6 +173,27 @@ export default function AdminDashboard() {
             subtitle="Queued + In Production" icon={TimeIcon} color="blue" loading={loading} />
           <StatCard title="Kapasitas Gudang" value={`${stats?.warehouse_occupancy ?? 0}%`}
             subtitle="Slot terisi" icon={BoxCubeIcon} color="purple" loading={loading} />
+        </div>
+
+        {/* End-to-end pipeline */}
+        <div className="glass-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-orange-400" />
+              <h2 className="text-base font-semibold text-white">Pipeline Operasional End-to-End</h2>
+            </div>
+            <span className="text-xs text-slate-500">Material masuk → QC → PPIC → Gudang → Dispatch</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3">
+            {loading ? (
+              Array.from({ length: 7 }).map((_, i) => <div key={i} className="skeleton h-20 rounded-lg" />)
+            ) : pipeline.map((stage) => (
+              <div key={stage.id} className={`rounded-lg border p-3 ${toneClasses[stage.tone] || toneClasses.slate}`}>
+                <div className="text-2xl font-bold leading-none">{stage.count}</div>
+                <div className="text-[11px] mt-2 leading-snug text-slate-300">{stage.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

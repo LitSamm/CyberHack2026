@@ -6,8 +6,6 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-const ROLES = ['admin', 'qc', 'ppic', 'warehouse'];
-
 const USERS_DATA = [
   // Admins
   { name: 'Budi Santoso', email: 'budi.admin@simaarome.id', role: 'admin', password: 'Admin@123' },
@@ -53,7 +51,6 @@ const MATERIAL_NAMES = [
 const QC_STATUSES = ['pending', 'approved', 'approved', 'approved', 'rejected'];
 const LOT_STATUSES = ['queued', 'in_production', 'completed', 'dispatched'];
 const PRIORITIES = ['urgent', 'normal', 'normal', 'low'];
-const TEMP_ZONES = ['ambient', 'cold', 'frozen'];
 const HAZARD_TYPES = [null, null, null, 'IBC', 'IPPC'];
 const ZONES = ['A', 'B', 'C'];
 const DISPATCH_STATUSES = ['prepared', 'shipped', 'delivered'];

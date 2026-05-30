@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +28,7 @@ const NAV_ITEMS: OriginalNavItem[] = [
   { href: '/admin', icon: <GridIcon />, label: 'Dashboard Admin', roles: ['admin'] },
   { href: '/admin/users', icon: <GroupIcon />, label: 'Manajemen User', roles: ['admin'] },
   { href: '/admin/audit', icon: <DocsIcon />, label: 'Audit Trail', roles: ['admin'] },
+  { href: '/materials', icon: <BoxIcon />, label: 'Material Intake', roles: ['warehouse', 'ppic', 'admin'] },
   { href: '/qc', icon: <CheckCircleIcon />, label: 'QC Dashboard', roles: ['qc', 'admin'] },
   { href: '/ppic', icon: <CalenderIcon />, label: 'PPIC & Produksi', roles: ['ppic', 'admin'] },
   { href: '/warehouse', icon: <BoxCubeIcon />, label: 'Gudang', roles: ['warehouse', 'admin'] },
