@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseSuppliersApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
-import { PackagePlus, Plus, Search, X } from 'lucide-react';
+import { PackagePlus, Plus, Search, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,8 @@ export default function MaterialIntakePage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     supplier_id: '',
     material_name: '',
@@ -104,6 +107,22 @@ export default function MaterialIntakePage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+    const sb = createClient();
+    try {
+      await sb.from('incoming_materials').delete().eq('id', confirmDelete);
+      toast.success('Penerimaan material dibatalkan');
+      setConfirmDelete(null);
+      fetchData();
+    } catch {
+      toast.error('Gagal membatalkan penerimaan material');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <DashboardLayout allowedRoles={['admin', 'warehouse', 'ppic']} onRefresh={fetchData}>
       <div className="space-y-6">
@@ -153,7 +172,7 @@ export default function MaterialIntakePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700 bg-slate-800/30">
-                {['Material', 'Supplier', 'Quantity', 'Tanggal Terima', 'Status QC', 'Catatan'].map((heading) => (
+                {['Material', 'Supplier', 'Quantity', 'Tanggal Terima', 'Status QC', 'Catatan', 'Aksi'].map((heading) => (
                   <th key={heading} className="text-left text-xs text-slate-500 font-semibold py-3 px-4 uppercase tracking-wide">
                     {heading}
                   </th>
@@ -164,7 +183,7 @@ export default function MaterialIntakePage() {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b border-slate-800/50">
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="py-3 px-4"><div className="skeleton h-4 rounded" /></td>
                     ))}
                   </tr>
@@ -177,6 +196,13 @@ export default function MaterialIntakePage() {
                   <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(material.received_date)}</td>
                   <td className="py-3 px-4"><StatusBadge status={material.qc_status} /></td>
                   <td className="py-3 px-4 text-slate-500 text-xs max-w-xs truncate">{material.notes || '-'}</td>
+                  <td className="py-3 px-4">
+                    {material.qc_status === 'pending' && (
+                      <button onClick={() => setConfirmDelete(material.id)} className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded transition-colors" title="Batalkan Intake">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -228,7 +254,7 @@ export default function MaterialIntakePage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="any"
                     value={formData.quantity}
                     onChange={(e) => setFormData((p) => ({ ...p, quantity: e.target.value }))}
                     required
@@ -286,6 +312,16 @@ export default function MaterialIntakePage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={!!confirmDelete}
+        title="Batalkan Intake"
+        message="Yakin ingin membatalkan dan menghapus data penerimaan material ini?"
+        confirmText="Batalkan"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
+        loading={deleting}
+      />
     </DashboardLayout>
   );
 }

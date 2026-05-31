@@ -21,7 +21,7 @@ export default function LoginPage() {
       await login(email, password);
       toast.success('Selamat datang kembali!');
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Login gagal. Periksa email dan password.';
+      const msg = err?.message || 'Login gagal. Periksa email dan password.';
       setError(msg);
       toast.error(msg);
     } finally {

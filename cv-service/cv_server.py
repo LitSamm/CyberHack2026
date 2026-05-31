@@ -33,9 +33,9 @@ async def start_video():
 
 
 @app.post("/receiving/webcam/start")
-async def start_webcam():
+async def start_webcam(device: int = 0):
     try:
-        return controller.start_webcam()
+        return controller.start_webcam(device=device)
     except SessionAlreadyRunning as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

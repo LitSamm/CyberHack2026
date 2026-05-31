@@ -14,10 +14,8 @@ import {
   supabaseDispatchApi,
 } from '@/lib/supabase-api';
 import { buildOperationsPipeline, getSevenDayProductionQcChart } from '@/lib/workflowDomain.js';
-import {
-  BoxIcon, CheckCircleIcon, TimeIcon, BoxCubeIcon,
-  GridIcon, ArrowUpIcon, DownloadIcon, DocsIcon, FileIcon, ChevronDownIcon
-} from '@/icons';
+import { Box, CheckCircle, Clock, Package, Grid, ArrowUp, Download, FileText, File, ChevronDown } from 'lucide-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ExportModal, { ReportType } from '@/components/ui/ExportModal';
 import { Activity } from 'lucide-react';
@@ -127,35 +125,31 @@ export default function AdminDashboard() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Overview operasional Sima Arome — auto-refresh 30 detik</p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <button 
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors"
-              >
-                
-                Export Data
-                
-              </button>
-              
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50">
-                  <div className="p-2 space-y-1">
-                    <button onClick={() => openExportModal('qc', 'Export Laporan QC')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors">
-                       Laporan QC (PDF)
-                    </button>
-                    <button onClick={() => openExportModal('lot_history', 'Export Data Jadwal & Lot')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors">
-                       Jadwal & Lot (CSV/PDF)
-                    </button>
-                    <button onClick={() => openExportModal('warehouse', 'Export Inventory Gudang')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors">
-                       Inventory Gudang (PDF)
-                    </button>
-                    <button onClick={() => openExportModal('dispatch', 'Export Riwayat Pengiriman')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors">
-                       Riwayat Pengiriman (CSV)
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <DropdownMenu.Root open={showExportMenu} onOpenChange={setShowExportMenu}>
+              <DropdownMenu.Trigger asChild>
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors">
+                  <Download className="w-4 h-4" />
+                  Export Data
+                  <ChevronDown className="w-4 h-4 opacity-50" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" className="w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden z-50 p-2 space-y-1">
+                  <DropdownMenu.Item onSelect={() => openExportModal('qc', 'Export Laporan QC')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors cursor-pointer outline-none">
+                     <FileText className="w-4 h-4" /> Laporan QC (PDF)
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onSelect={() => openExportModal('lot_history', 'Export Data Jadwal & Lot')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors cursor-pointer outline-none">
+                     <FileText className="w-4 h-4" /> Jadwal & Lot (CSV/PDF)
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onSelect={() => openExportModal('warehouse', 'Export Inventory Gudang')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors cursor-pointer outline-none">
+                     <FileText className="w-4 h-4" /> Inventory Gudang (PDF)
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onSelect={() => openExportModal('dispatch', 'Export Riwayat Pengiriman')} className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-white rounded-lg flex items-center gap-2 transition-colors cursor-pointer outline-none">
+                     <FileText className="w-4 h-4" /> Riwayat Pengiriman (CSV)
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
             <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 hidden sm:flex">
               <div className="w-2 h-2 bg-green-400 rounded-full pulse-dot" />
               Live
@@ -166,13 +160,13 @@ export default function AdminDashboard() {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <StatCard title="Lot Dibuat Hari Ini" value={stats?.lots_today ?? 0}
-            subtitle="Total lot produksi" icon={BoxIcon} color="orange" loading={loading} />
+            subtitle="Total lot produksi" icon={Box} color="orange" loading={loading} />
           <StatCard title="QC Pass Rate" value={`${stats?.qc_pass_rate ?? 0}%`}
-            subtitle="Hari ini" icon={CheckCircleIcon} color="green" loading={loading} />
+            subtitle="Hari ini" icon={CheckCircle} color="green" loading={loading} />
           <StatCard title="Jadwal Aktif" value={stats?.pending_schedules ?? 0}
-            subtitle="Queued + In Production" icon={TimeIcon} color="blue" loading={loading} />
+            subtitle="Queued + In Production" icon={Clock} color="blue" loading={loading} />
           <StatCard title="Kapasitas Gudang" value={`${stats?.warehouse_occupancy ?? 0}%`}
-            subtitle="Slot terisi" icon={BoxCubeIcon} color="purple" loading={loading} />
+            subtitle="Slot terisi" icon={Package} color="purple" loading={loading} />
         </div>
 
         {/* End-to-end pipeline */}
@@ -200,7 +194,7 @@ export default function AdminDashboard() {
           {/* Chart */}
           <div className="xl:col-span-2 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-5">
             <div className="flex items-center gap-2 mb-5">
-              
+              <Activity className="w-5 h-5 text-blue-500" />
               <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Produksi & QC 7 Hari Terakhir</h2>
             </div>
             <ResponsiveContainer width="100%" height={220}>
@@ -221,7 +215,7 @@ export default function AdminDashboard() {
           {/* Activity Feed */}
           <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-5">
             <div className="flex items-center gap-2 mb-4">
-              
+              <Clock className="w-5 h-5 text-orange-500" />
               <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Aktivitas Terbaru</h2>
             </div>
             <div className="space-y-3 overflow-y-auto max-h-56">

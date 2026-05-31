@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { PaperPlaneIcon, PlusIcon, CloseIcon, BoxIcon } from '@/icons';
+import { Send, Plus, X, Package } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { supabaseDispatchApi, supabaseLotsApi } from '@/lib/supabase-api';
@@ -98,7 +98,7 @@ export default function DispatchPage() {
           </div>
           <button onClick={() => setShowForm(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
-            
+            <Plus className="w-4 h-4 text-gray-800 dark:text-white/90" />
             Buat Pengiriman
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function DispatchPage() {
                     {STATUS_NEXT[d.status] && (
                       <button onClick={() => handleUpdateStatus(d)}
                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs rounded-lg transition-colors">
-                        
+                        <Send className="w-3 h-3" />
                         {STATUS_LABELS[STATUS_NEXT[d.status]]}
                       </button>
                     )}
@@ -178,7 +178,7 @@ export default function DispatchPage() {
           </table>
           {!loading && dispatches.length === 0 && (
             <div className="text-center py-12">
-              
+              <Package className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3 opacity-50" />
               <p className="text-gray-400 dark:text-gray-500">Belum ada pengiriman</p>
             </div>
           )}
@@ -191,7 +191,7 @@ export default function DispatchPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6">
             <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
-              
+              <X className="w-5 h-5" />
             </button>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">Buat Pengiriman Baru</h3>
             <form onSubmit={handleCreate} className="space-y-4">
