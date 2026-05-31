@@ -69,6 +69,11 @@ export default function PPICDashboard() {
     if (!dragging) return;
     const schedule = schedules.find(s => s.id === dragging);
     if (!schedule || schedule.status === targetStatus) { setDragging(null); return; }
+    if (!['queued', 'in_production'].includes(schedule.status)) {
+      toast.error('Lot ini sudah keluar dari kontrol PPIC');
+      setDragging(null);
+      return;
+    }
     if (targetStatus === 'completed') {
       toast.error('Release lot selesai hanya dapat dilakukan oleh QC produk jadi');
       setDragging(null);
@@ -78,7 +83,7 @@ export default function PPICDashboard() {
       await supabasePpicApi.moveSchedule(dragging, targetStatus);
       setSchedules(prev => prev.map(s => s.id === dragging ? { ...s, status: targetStatus } : s));
       toast.success(`Lot dipindah ke ${COLUMNS.find(c => c.id === targetStatus)?.label}`);
-    } catch { toast.error('Gagal update status'); }
+    } catch (err: any) { toast.error(err?.message || 'Gagal update status'); }
     setDragging(null);
   };
 
@@ -110,7 +115,7 @@ export default function PPICDashboard() {
       toast.success('Jadwal dihapus');
       setConfirmDelete(null);
       fetchData();
-    } catch { toast.error('Gagal menghapus jadwal'); }
+    } catch (err: any) { toast.error(err?.message || 'Gagal menghapus jadwal'); }
   };
 
   return (
@@ -156,22 +161,28 @@ export default function PPICDashboard() {
                 <div className="space-y-3">
                   {loading && col.id === 'queued' ? (
                     Array.from({ length: 2 }).map((_, i) => <div key={i} className="skeleton h-24 rounded-lg" />)
-                  ) : colSchedules.map(s => (
+                  ) : colSchedules.map(s => {
+                    const canMove = ['queued', 'in_production'].includes(s.status);
+                    const canDelete = s.status === 'queued';
+                    return (
                     <div key={s.id}
-                      draggable
+                      draggable={canMove}
                       onDragStart={() => handleDragStart(s.id)}
                       onDragEnd={handleDragEnd}
                       className={cn('kanban-card bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-800 rounded-xl p-3 cursor-grab active:cursor-grabbing select-none',
-                        dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : ''
+                        dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : '',
+                        !canMove && 'cursor-default'
                       )}>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <Link href={`/lots/${s.lot_id}`} className="font-mono text-orange-400 hover:text-orange-500 text-xs font-semibold">
                           {s.lots?.lot_number || 'SA-???'}
                         </Link>
-                        <button onClick={() => setConfirmDelete(s.id)}
-                          className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canDelete && (
+                          <button onClick={() => setConfirmDelete(s.id)}
+                            className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                       <div className="text-gray-700 dark:text-gray-300 text-xs mb-2 truncate">
                         {s.lots?.incoming_materials?.material_name || 'Material tidak diketahui'}
@@ -190,7 +201,7 @@ export default function PPICDashboard() {
                         <div className="mt-2 text-gray-400 dark:text-gray-500 text-xs italic truncate">{s.notes}</div>
                       )}
                     </div>
-                  ))}
+                  )})}
 
                   {!loading && colSchedules.length === 0 && (
                     <div className="text-center py-6 text-slate-600 text-xs border border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
@@ -293,7 +304,7 @@ export default function PPICDashboard() {
       )}
 
       <ConfirmModal isOpen={!!confirmDelete} title="Hapus Jadwal"
-        message="Jadwal ini akan dihapus permanen. Lot tidak akan ikut terhapus." confirmText="Hapus"
+        message="Jadwal queued dan draft lot terkait akan dihapus permanen." confirmText="Hapus"
         variant="danger" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} />
 
       <ExportModal 
