@@ -16,6 +16,7 @@ AromOS adalah sistem manajemen operasi terintegrasi untuk Sima Arome, produsen e
 | Drag & Drop | Native HTML5 DnD (Kanban) |
 | Backend | Node.js + Express |
 | Database | Supabase (PostgreSQL) |
+| AI | Google Gemini 2.5 Flash (`@google/generative-ai`) |
 | ML | Python + OpenCV |
 | Auth | Supabase Auth + JWT |
 | Deploy | Vercel (frontend) + Railway (backend) |
@@ -67,6 +68,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_CV_SERVICE_URL=http://localhost:8000
+GEMINI_API_KEY=your-gemini-api-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-untuk-ai-assistant
 ```
 
 **Backend** — buat file `backend/.env`:
@@ -220,6 +223,7 @@ aromOS/
 │       ├── app/
 │       │   ├── login/page.tsx   ← Login page
 │       │   ├── admin/           ← Admin dashboard
+│       │   ├── ai-assistant/    ← AI Chat Assistant (Gemini)
 │       │   ├── qc/              ← QC dashboard
 │       │   ├── ppic/            ← PPIC + Kanban
 │       │   ├── warehouse/       ← Floor map
