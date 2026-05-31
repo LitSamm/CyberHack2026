@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { auditApi, usersApi } from '@/lib/api';
+import { AnimatedRow } from '@/components/ui/AnimatedList';
 import { formatDateTime, getRoleLabel } from '@/lib/utils';
 
 import toast from 'react-hot-toast';
@@ -122,8 +123,8 @@ export default function AuditPage() {
                     ))}
                   </tr>
                 ))
-              ) : logs.map(log => (
-                <tr key={log.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
+              ) : logs.map((log, i) => (
+                <AnimatedRow key={log.id} index={i} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                   <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">{formatDateTime(log.timestamp)}</td>
                   <td className="py-3 px-4">
                     <div className="text-gray-800 dark:text-white/90 text-xs font-medium">{log.users?.name || '-'}</div>
@@ -134,7 +135,7 @@ export default function AuditPage() {
                   </td>
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300 text-xs">{TABLE_LABELS[log.table_name] || log.table_name}</td>
                   <td className="py-3 px-4 text-gray-400 dark:text-gray-500 text-xs font-mono truncate max-w-32">{log.record_id || '-'}</td>
-                </tr>
+                </AnimatedRow>
               ))}
             </tbody>
           </table>

@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseNotificationsApi } from '@/lib/supabase-api';
 import { Bell, Clock, PackageCheck, ThermometerSnowflake, AlertTriangle, Info, Trash2, CheckCircle2 } from 'lucide-react';
+import { AnimatedItem } from '@/components/ui/AnimatedList';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow, format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -130,8 +131,9 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-800/50">
-              {filteredNotifs.map(notif => (
-                <div key={notif.id} className={cn("p-4 flex gap-4 transition-colors relative group hover:bg-slate-800/30", !notif.is_read ? "bg-slate-800/20" : "")}>
+              {filteredNotifs.map((notif, i) => (
+                <AnimatedItem key={notif.id} index={i}>
+                <div className={cn("p-4 flex gap-4 transition-colors relative group hover:bg-slate-800/30", !notif.is_read ? "bg-slate-800/20" : "")}>
                   {!notif.is_read && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
                   )}
@@ -153,6 +155,7 @@ export default function NotificationsPage() {
                     </p>
                   </div>
                 </div>
+                </AnimatedItem>
               ))}
             </div>
           )}

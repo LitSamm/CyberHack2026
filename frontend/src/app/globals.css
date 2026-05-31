@@ -921,3 +921,20 @@ span.flatpickr-weekday,
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
+
+/* AnimatedList scrollbar */
+.animated-list-scrollbar::-webkit-scrollbar { width: 6px; }
+.animated-list-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.animated-list-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+.dark .animated-list-scrollbar::-webkit-scrollbar-thumb { background: #374151; }
+
+/* AnimatedThemeToggler — view transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration);
+}

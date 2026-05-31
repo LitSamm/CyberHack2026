@@ -58,7 +58,7 @@ router.put('/:id', authenticate, requireRole('admin'), auditLog('users', 'UPDATE
   res.json(data);
 });
 
-// DELETE /api/users/:id — deactivate instead of hard delete
+// DELETE /api/users/:id — deactivate (soft delete)
 router.delete('/:id', authenticate, requireRole('admin'), auditLog('users', 'DELETE'), async (req, res) => {
   const { data, error } = await supabase
     .from('users')
@@ -68,6 +68,20 @@ router.delete('/:id', authenticate, requireRole('admin'), auditLog('users', 'DEL
     .single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ message: 'User deactivated', user: data });
+});
+
+// DELETE /api/users/:id/hard — permanent delete
+router.delete('/:id/hard', authenticate, requireRole('admin'), auditLog('users', 'DELETE'), async (req, res) => {
+  const { error: dbError } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', req.params.id);
+  if (dbError) return res.status(500).json({ error: dbError.message });
+
+  const { error: authError } = await supabase.auth.admin.deleteUser(req.params.id);
+  if (authError) return res.status(500).json({ error: authError.message });
+
+  res.json({ message: 'User permanently deleted' });
 });
 
 module.exports = router;

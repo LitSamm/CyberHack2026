@@ -6,6 +6,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseSuppliersApi } from '@/lib/supabase-api';
 import { formatDate } from '@/lib/utils';
+import { AnimatedRow } from '@/components/ui/AnimatedList';
 import { PackagePlus, Plus, Search, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -165,8 +166,8 @@ export default function MaterialIntakePage() {
                 ))
               ) : filteredMaterials.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-8 text-slate-500">Tidak ada material</td></tr>
-              ) : filteredMaterials.map((material) => (
-                <tr key={material.id} className="border-b border-slate-200 dark:border-slate-700/50 table-row-hover">
+              ) : filteredMaterials.map((material, i) => (
+                <AnimatedRow key={material.id} index={i} className="border-b border-slate-200 dark:border-slate-700/50 table-row-hover">
                   <td className="py-3 px-4 font-medium text-slate-800 dark:text-white">{material.material_name}</td>
                   <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{material.suppliers?.name || '-'}</td>
                   <td className="py-3 px-4 text-slate-600 dark:text-slate-300 font-mono">{material.quantity} {material.unit}</td>
@@ -180,7 +181,7 @@ export default function MaterialIntakePage() {
                       </button>
                     )}
                   </td>
-                </tr>
+                </AnimatedRow>
               ))}
             </tbody>
           </table>

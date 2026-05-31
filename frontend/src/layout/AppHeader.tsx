@@ -1,5 +1,5 @@
 "use client";
-import { ThemeToggleButton } from "@/components/dashboard/common/ThemeToggleButton";
+import { AnimatedThemeToggler } from "@/components/dashboard/common/AnimatedThemeToggler";
 import UserDropdown from "@/components/dashboard/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 import React, { useState } from "react";
@@ -64,7 +64,7 @@ const AppHeader: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
                 <TimeIcon />
               </button>
             )}
-            <ThemeToggleButton />
+            <AnimatedThemeToggler variant="circle" duration={400} />
             <div className="relative pt-1 pl-2">
               <NotificationBell />
             </div>

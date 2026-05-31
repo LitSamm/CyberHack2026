@@ -35,6 +35,7 @@ export const usersApi = {
   create: (data: any) => api.post('/api/users', data),
   update: (id: string, data: any) => api.put(`/api/users/${id}`, data),
   deactivate: (id: string) => api.delete(`/api/users/${id}`),
+  hardDelete: (id: string) => api.delete(`/api/users/${id}/hard`),
 };
 
 // ── Audit ─────────────────────────────────────────────

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { Send, Plus, X, Package } from 'lucide-react';
+import { AnimatedRow } from '@/components/ui/AnimatedList';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { supabaseDispatchApi, supabaseLotsApi } from '@/lib/supabase-api';
@@ -155,8 +156,8 @@ export default function DispatchPage() {
                     ))}
                   </tr>
                 ))
-              ) : dispatches.map(d => (
-                <tr key={d.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
+              ) : dispatches.map((d, i) => (
+                <AnimatedRow key={d.id} index={i} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                   <td className="py-3 px-4">
                     <span className="font-mono text-orange-400 text-xs font-semibold">{d.lots?.lot_number}</span>
                   </td>
@@ -176,7 +177,7 @@ export default function DispatchPage() {
                       </button>
                     )}
                   </td>
-                </tr>
+                </AnimatedRow>
               ))}
             </tbody>
           </table>

@@ -7,6 +7,7 @@ import StatCard from '@/components/ui/StatCard';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseQcApi, supabaseSuppliersApi } from '@/lib/supabase-api';
+import { AnimatedItem } from '@/components/ui/AnimatedList';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Camera, Download, Play, Square, RotateCcw, PackagePlus, Upload, ScanLine, FileSpreadsheet } from 'lucide-react';
 import ExportModal from '@/components/ui/ExportModal';
@@ -497,8 +498,9 @@ export default function QCDashboard() {
                   <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
                   <p>Semua material sudah diperiksa</p>
                 </div>
-              ) : pendingMaterials.map(mat => (
-                <div key={mat.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500/30 transition-colors gap-3">
+              ) : pendingMaterials.map((mat, i) => (
+                <AnimatedItem key={mat.id} index={i}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500/30 transition-colors gap-3">
                   <div className="min-w-0">
                     <div className="text-slate-800 dark:text-white text-sm font-medium truncate">{mat.material_name}</div>
                     <div className="text-slate-500 text-xs">{mat.suppliers?.name} • {mat.quantity} {mat.unit}</div>
@@ -511,6 +513,7 @@ export default function QCDashboard() {
                     </button>
                   </div>
                 </div>
+                </AnimatedItem>
               ))}
             </div>
           </div>
@@ -529,8 +532,9 @@ export default function QCDashboard() {
                   <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-30" />
                   <p>Belum ada pemeriksaan hari ini</p>
                 </div>
-              ) : todayChecks.map(check => (
-                <div key={check.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
+              ) : todayChecks.map((check, i) => (
+                <AnimatedItem key={check.id} index={i}>
+                <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="flex items-center gap-2">
                       <div className="text-slate-800 dark:text-white text-sm font-medium">
@@ -544,6 +548,7 @@ export default function QCDashboard() {
                   </div>
                   <StatusBadge status={check.result} />
                 </div>
+                </AnimatedItem>
               ))}
             </div>
           </div>
@@ -557,8 +562,9 @@ export default function QCDashboard() {
             <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
               {pendingFinishedLots.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">Tidak ada lot menunggu release</div>
-              ) : pendingFinishedLots.map(lot => (
-                <div key={lot.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 gap-3">
+              ) : pendingFinishedLots.map((lot, i) => (
+                <AnimatedItem key={lot.id} index={i}>
+                <div className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 gap-3">
                   <div className="min-w-0">
                     <div className="text-slate-800 dark:text-white text-sm font-mono font-medium">{lot.lot_number}</div>
                     <div className="text-slate-500 text-xs">{lot.incoming_materials?.material_name}</div>
@@ -568,6 +574,7 @@ export default function QCDashboard() {
                     Release QC
                   </button>
                 </div>
+                </AnimatedItem>
               ))}
             </div>
           </div>

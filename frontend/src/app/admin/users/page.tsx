@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+import { Pencil, UserX, UserPlus, Search, X, UserCheck, Trash2 } from 'lucide-react';
+import { AnimatedRow } from '@/components/ui/AnimatedList';
+
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { usersApi } from '@/lib/api';
@@ -26,6 +29,8 @@ export default function UsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState<string | null>(null);
+  const [confirmActivate, setConfirmActivate] = useState<string | null>(null);
+  const [confirmHardDelete, setConfirmHardDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'qc' });
   const [saving, setSaving] = useState(false);
 
@@ -83,6 +88,30 @@ export default function UsersPage() {
     }
   };
 
+  const handleHardDelete = async () => {
+    if (!confirmHardDelete) return;
+    try {
+      await usersApi.hardDelete(confirmHardDelete);
+      toast.success('User dihapus permanen');
+      setConfirmHardDelete(null);
+      fetchUsers();
+    } catch {
+      toast.error('Gagal menghapus user');
+    }
+  };
+
+  const handleActivate = async () => {
+    if (!confirmActivate) return;
+    try {
+      await usersApi.update(confirmActivate, { is_active: true });
+      toast.success('User diaktifkan kembali');
+      setConfirmActivate(null);
+      fetchUsers();
+    } catch {
+      toast.error('Gagal mengaktifkan user');
+    }
+  };
+
   const openEdit = (user: any) => {
     setEditUser(user);
     setFormData({ name: user.name, email: user.email, password: '', role: user.role });
@@ -99,7 +128,7 @@ export default function UsersPage() {
           </div>
           <button onClick={() => { setEditUser(null); setFormData({ name: '', email: '', password: '', role: 'qc' }); setShowForm(true); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
-            
+            <UserPlus size={16} />
             Tambah User
           </button>
         </div>
@@ -107,7 +136,7 @@ export default function UsersPage() {
         {/* Filters */}
         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-48">
-            
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Cari nama atau email..."
               className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 placeholder-slate-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500" />
@@ -138,8 +167,8 @@ export default function UsersPage() {
                     ))}
                   </tr>
                 ))
-              ) : filtered.map(user => (
-                <tr key={user.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
+              ) : filtered.map((user, i) => (
+                <AnimatedRow key={user.id} index={i} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
@@ -160,19 +189,28 @@ export default function UsersPage() {
                   <td className="py-3 px-4 text-gray-400 dark:text-gray-500 text-xs">{formatDate(user.created_at)}</td>
                   <td className="py-3 px-4">
                     <div className="flex gap-2">
-                      <button onClick={() => openEdit(user)}
-                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
-                        
+                      <button onClick={() => openEdit(user)} title="Edit user"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white/90 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+                        <Pencil size={14} />
                       </button>
-                      {user.is_active && (
-                        <button onClick={() => setConfirmDeactivate(user.id)}
+                      <button onClick={() => setConfirmHardDelete(user.id)} title="Hapus permanen"
+                        className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                      {user.is_active ? (
+                        <button onClick={() => setConfirmDeactivate(user.id)} title="Nonaktifkan user"
                           className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors">
-                          
+                          <UserX size={14} />
+                        </button>
+                      ) : (
+                        <button onClick={() => setConfirmActivate(user.id)} title="Aktifkan kembali"
+                          className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded transition-colors">
+                          <UserCheck size={14} />
                         </button>
                       )}
                     </div>
                   </td>
-                </tr>
+                </AnimatedRow>
               ))}
             </tbody>
           </table>
@@ -188,7 +226,7 @@ export default function UsersPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6">
             <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">
-              
+              <X size={18} />
             </button>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-5">{editUser ? 'Edit User' : 'Tambah User Baru'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -241,6 +279,26 @@ export default function UsersPage() {
         variant="danger"
         onConfirm={handleDeactivate}
         onCancel={() => setConfirmDeactivate(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmHardDelete}
+        title="Hapus User Permanen"
+        message="User ini akan dihapus secara permanen dan tidak dapat dikembalikan. Yakin melanjutkan?"
+        confirmText="Hapus Permanen"
+        variant="danger"
+        onConfirm={handleHardDelete}
+        onCancel={() => setConfirmHardDelete(null)}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmActivate}
+        title="Aktifkan User"
+        message="User ini akan diaktifkan kembali dan dapat login. Yakin melanjutkan?"
+        confirmText="Aktifkan"
+        variant="info"
+        onConfirm={handleActivate}
+        onCancel={() => setConfirmActivate(null)}
       />
     </DashboardLayout>
   );
