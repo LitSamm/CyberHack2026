@@ -78,7 +78,13 @@ export default function LotPassportPage() {
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900 dark:text-white"><FlaskConical className="h-4 w-4 text-orange-500" /> Riwayat QC</h2>
           <TimelineRows rows={[
             ...rawQc.map((check: any) => ({ label: 'Raw-material QC', value: check.result, detail: formatDateTime(check.checked_at) })),
-            ...finishedQc.map((check: any) => ({ label: 'Extract / powder release QC', value: check.result, detail: formatDateTime(check.checked_at) })),
+            ...finishedQc.map((check: any) => ({
+              label: check.ai_used ? 'Extract / powder release QC + optical screening' : 'Extract / powder release QC',
+              value: check.result,
+              detail: check.ai_used
+                ? `${formatDateTime(check.checked_at)} · AI ${check.ai_recommendation} (${Math.round((check.ai_confidence || 0) * 100)}%) · Operator ${check.color_grade}/${check.consistency_grade}`
+                : formatDateTime(check.checked_at),
+            })),
           ]} empty="Belum ada riwayat QC" />
         </section>
 

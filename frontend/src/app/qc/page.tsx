@@ -8,7 +8,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseQcApi, supabaseSuppliersApi } from '@/lib/supabase-api';
 import { formatDate, formatDateTime } from '@/lib/utils';
-import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Camera, Download, Play, Square, RotateCcw, PackagePlus } from 'lucide-react';
+import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Camera, Download, Play, Square, RotateCcw, PackagePlus, Upload, ScanLine, FileSpreadsheet } from 'lucide-react';
 import ExportModal from '@/components/ui/ExportModal';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
@@ -60,6 +60,9 @@ export default function QCDashboard() {
   const [intakeForm, setIntakeForm] = useState({
     supplier_id: '', material_name: 'Apel Fuji', unit: 'item',
   });
+  const [powderBusy, setPowderBusy] = useState(false);
+  const [powderResult, setPowderResult] = useState<any>(null);
+  const [hosiSummary, setHosiSummary] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -101,7 +104,17 @@ export default function QCDashboard() {
         notes: formData.notes,
       };
       if (qcSubject === 'finished_lot') {
-        await supabaseQcApi.submitFinishedProduct({ lot_id: selectedMaterial.id, ...gradePayload });
+        await supabaseQcApi.submitFinishedProduct({
+          lot_id: selectedMaterial.id,
+          ...gradePayload,
+          ...(powderResult ? {
+            ai_color_grade: powderResult.color_grade,
+            ai_consistency_grade: powderResult.consistency_grade,
+            ai_contamination_flag: powderResult.contamination_flag,
+            ai_confidence: powderResult.confidence,
+            ai_recommendation: powderResult.recommendation,
+          } : {}),
+        });
       } else {
         await supabaseQcApi.submitRawMaterial({ material_id: selectedMaterial.id, ...gradePayload });
       }
@@ -139,6 +152,8 @@ export default function QCDashboard() {
     setFormData({ 
       color_grade: 3, consistency_grade: 3, contamination_flag: false, notes: '', result: '',
     });
+    setPowderResult(null);
+    setHosiSummary(null);
     setShowQCForm(true);
   };
 
@@ -148,7 +163,56 @@ export default function QCDashboard() {
     setFormData({
       color_grade: 3, consistency_grade: 3, contamination_flag: false, notes: '', result: '',
     });
+    setPowderResult(null);
+    setHosiSummary(null);
     setShowQCForm(true);
+  };
+
+  const applyPowderResult = (result: any) => {
+    setPowderResult(result);
+    setFormData(previous => ({
+      ...previous,
+      color_grade: result.color_grade,
+      consistency_grade: result.consistency_grade,
+      contamination_flag: result.contamination_flag,
+    }));
+  };
+
+  const powderRequest = async (path: string, file?: File) => {
+    setPowderBusy(true);
+    try {
+      const body = file ? new FormData() : undefined;
+      if (file) body?.append('file', file);
+      const response = await fetch(`${cameraServiceUrl}${path}`, { method: 'POST', body });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.detail || 'Powder screening gagal diproses');
+      return result;
+    } catch (err: any) {
+      toast.error(err?.message || 'Powder screening service tidak tersedia');
+      throw err;
+    } finally {
+      setPowderBusy(false);
+    }
+  };
+
+  const analyzePowderFile = async (file?: File) => {
+    if (!file) return;
+    const result = await powderRequest('/powder/analyze/upload', file);
+    applyPowderResult(result);
+    toast.success('Screening visual powder selesai');
+  };
+
+  const analyzePowderWebcam = async () => {
+    const result = await powderRequest(`/powder/analyze/webcam?device=${selectedCamera}`);
+    applyPowderResult(result);
+    toast.success('Snapshot webcam selesai dianalisis');
+  };
+
+  const analyzeHosiCsv = async (file?: File) => {
+    if (!file) return;
+    const result = await powderRequest('/powder/hosi/summary', file);
+    setHosiSummary(result);
+    toast.success('CSV HOSI berhasil divalidasi');
   };
 
   const cameraRequest = async (path: string) => {
@@ -514,7 +578,7 @@ export default function QCDashboard() {
       {showQCForm && selectedMaterial && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQCForm(false)} />
-          <div className="relative glass-card w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="relative glass-card w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
               <X className="w-4 h-4" />
             </button>
@@ -529,6 +593,63 @@ export default function QCDashboard() {
             </div>
 
             <div className="space-y-5">
+              {qcSubject === 'finished_lot' && (
+                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                        <ScanLine className="h-4 w-4" />
+                        AI-assisted Optical Screening
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">Screening visual OpenCV. Operator tetap menetapkan keputusan QC akhir.</p>
+                    </div>
+                    {powderResult && (
+                      <span className={`rounded px-2 py-1 text-xs font-semibold uppercase ${powderResult.recommendation === 'approve' ? 'bg-green-500/15 text-green-300' : 'bg-yellow-500/15 text-yellow-300'}`}>
+                        {powderResult.recommendation}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700">
+                      <Upload className="h-4 w-4" />
+                      Upload Foto
+                      <input type="file" accept="image/*" className="hidden" disabled={powderBusy}
+                        onChange={event => analyzePowderFile(event.target.files?.[0])} />
+                    </label>
+                    <button onClick={analyzePowderWebcam} disabled={powderBusy}
+                      className="flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+                      <Camera className="h-4 w-4" />
+                      Snapshot Webcam
+                    </button>
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      CSV HOSI
+                      <input type="file" accept=".csv,text/csv" className="hidden" disabled={powderBusy}
+                        onChange={event => analyzeHosiCsv(event.target.files?.[0])} />
+                    </label>
+                  </div>
+
+                  {powderBusy && <div className="mt-3 text-xs text-cyan-300">Menganalisis sampel...</div>}
+                  {powderResult && (
+                    <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
+                      <img src={powderResult.annotated_image} alt="Preview screening powder" className="h-28 w-full rounded border border-slate-700 object-cover" />
+                      <div className="space-y-1 text-xs text-slate-300">
+                        <div>Confidence: <strong>{Math.round(powderResult.confidence * 100)}%</strong></div>
+                        <div>Anomali visual: <strong>{(powderResult.anomaly_ratio * 100).toFixed(2)}%</strong></div>
+                        <p className="leading-relaxed text-slate-400">{powderResult.explanation}</p>
+                      </div>
+                    </div>
+                  )}
+                  {hosiSummary && (
+                    <div className="mt-3 rounded border border-slate-700 bg-slate-900/60 p-3 text-xs text-slate-300">
+                      HOSI CSV tervalidasi: {hosiSummary.sample_count} titik, {hosiSummary.wavelength_min_nm}–{hosiSummary.wavelength_max_nm} nm.
+                      <div className="mt-1 text-slate-500">{hosiSummary.explanation}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <GradeSlider label="Grade Warna" value={formData.color_grade}
                 onChange={v => setFormData(p => ({ ...p, color_grade: v }))} />
               <GradeSlider label="Grade Konsistensi" value={formData.consistency_grade}

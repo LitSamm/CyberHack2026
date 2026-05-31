@@ -58,6 +58,7 @@ python -m pip install -r requirements.txt
    - `supabase/material_qc_migration.sql`
    - `supabase/notifications_schema.sql`
    - `supabase/demo_ready_operations_migration.sql`
+   - `supabase/powder_screening_ai_migration.sql`
 4. Catat:
    - Project URL: `https://xxx.supabase.co`
    - Anon Key (dari Settings → API)

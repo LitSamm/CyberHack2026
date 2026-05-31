@@ -153,7 +153,11 @@ export const supabaseQcApi = {
     if (error) throw error;
     return data;
   },
-  submitFinishedProduct: async (payload: { lot_id: string; color_grade: number; consistency_grade: number; contamination_flag: boolean; result: 'pass' | 'fail'; notes?: string }) => {
+  submitFinishedProduct: async (payload: {
+    lot_id: string; color_grade: number; consistency_grade: number; contamination_flag: boolean;
+    result: 'pass' | 'fail'; notes?: string; ai_color_grade?: number; ai_consistency_grade?: number;
+    ai_contamination_flag?: boolean; ai_confidence?: number; ai_recommendation?: 'approve' | 'review' | 'reject';
+  }) => {
     const sb = getSupabase();
     const { data, error } = await sb.rpc('submit_finished_product_qc', {
       p_lot_id: payload.lot_id,
@@ -162,6 +166,11 @@ export const supabaseQcApi = {
       p_contamination_flag: payload.contamination_flag,
       p_result: payload.result,
       p_notes: payload.notes || null,
+      p_ai_color_grade: payload.ai_color_grade ?? null,
+      p_ai_consistency_grade: payload.ai_consistency_grade ?? null,
+      p_ai_contamination_flag: payload.ai_contamination_flag ?? null,
+      p_ai_confidence: payload.ai_confidence ?? null,
+      p_ai_recommendation: payload.ai_recommendation ?? null,
     });
     if (error) throw error;
     return data;
