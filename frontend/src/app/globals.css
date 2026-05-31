@@ -33,22 +33,35 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
+  background: #E2E8F0;
+}
+.dark ::-webkit-scrollbar-track {
   background: #1E293B;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #CBD5E1;
   border-radius: 3px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
 ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
 /* Glassmorphism card */
 .glass-card {
-  background: rgba(30, 41, 59, 0.8);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.6);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 12px;
+}
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(51, 65, 85, 0.6);
 }
 
 /* Gradient text */
@@ -107,6 +120,9 @@ body {
   transition: background-color 0.1s ease;
 }
 .table-row-hover:hover {
+  background-color: rgba(241, 245, 249, 0.8);
+}
+.dark .table-row-hover:hover {
   background-color: rgba(30, 41, 59, 0.6);
 }
 
@@ -146,10 +162,13 @@ input:focus, textarea:focus, select:focus {
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #1E293B 25%, #273447 50%, #1E293B 75%);
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
   border-radius: 6px;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, #1E293B 25%, #273447 50%, #1E293B 75%);
 }
 
 @custom-variant dark (&:is(.dark *));

@@ -19,12 +19,6 @@ interface SearchResult {
 const AppHeader: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
       toggleSidebar();
@@ -36,45 +30,6 @@ const AppHeader: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        inputRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  useEffect(() => {
-    const handler = setTimeout(async () => {
-      if (searchQuery.trim().length >= 2) {
-        setSearchLoading(true);
-        try {
-          const { data } = await searchApi.search(searchQuery);
-          setSearchResults(data);
-          setShowSearch(true);
-        } catch {}
-        setSearchLoading(false);
-      } else {
-        setSearchResults(null);
-        setShowSearch(false);
-      }
-    }, 350);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSearch(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
@@ -105,76 +60,8 @@ const AppHeader: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
             </svg>
           </button>
 
-          <div className="hidden lg:block w-full max-w-xl relative" ref={searchRef}>
-            <div className="relative">
-              <span className="absolute -translate-y-1/2 left-4 top-1/2 pointer-events-none">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M9.16667 3.33333C5.94501 3.33333 3.33333 5.94501 3.33333 9.16667C3.33333 12.3883 5.94501 15 9.16667 15C12.3883 15 15 12.3883 15 9.16667C15 5.94501 12.3883 3.33333 9.16667 3.33333ZM1.66667 9.16667C1.66667 5.02453 5.02453 1.66667 9.16667 1.66667C13.3088 1.66667 16.6667 5.02453 16.6667 9.16667C16.6667 11.0264 15.9897 12.7275 14.8698 14.0538L18.0893 17.2733C18.4147 17.5987 18.4147 18.1264 18.0893 18.4518C17.7638 18.7772 17.2362 18.7772 16.9107 18.4518L13.6913 15.2323C12.4419 16.1432 10.8719 16.6667 9.16667 16.6667C5.02453 16.6667 1.66667 13.3088 1.66667 9.16667Z" fill="currentColor" />
-                </svg>
-              </span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari lot, material, customer... (⌘ K)"
-                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
-              {searchQuery && (
-                <button onClick={() => { setSearchQuery(''); setShowSearch(false); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  <CloseIcon />
-                </button>
-              )}
-            </div>
-
-            {/* Search Results Dropdown */}
-            {showSearch && searchResults && (
-              <div className="absolute top-full mt-2 left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl rounded-xl overflow-hidden z-50 max-h-80 overflow-y-auto">
-                {searchResults.total === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-sm">Tidak ada hasil untuk &quot;{searchQuery}&quot;</div>
-                ) : (
-                  <div className="p-2 space-y-2">
-                    {searchResults.lots.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-xs text-gray-500 font-semibold uppercase tracking-wide">Lot</div>
-                        {searchResults.lots.map(lot => (
-                          <Link key={lot.id} href={`/ppic?lot=${lot.id}`}
-                            className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm">
-                            <span className="text-brand-500 font-mono font-semibold">{lot.lot_number}</span>
-                            <span className="text-gray-500 dark:text-gray-400">{lot.status}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.materials.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-xs text-gray-500 font-semibold uppercase tracking-wide">Material</div>
-                        {searchResults.materials.map(m => (
-                          <Link key={m.id} href={`/qc`}
-                            className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm">
-                            <span className="text-gray-800 dark:text-white">{m.material_name}</span>
-                            <span className="text-gray-500 dark:text-gray-400 ml-auto">{m.qc_status}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.dispatches.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-xs text-gray-500 font-semibold uppercase tracking-wide">Pengiriman</div>
-                        {searchResults.dispatches.map(d => (
-                          <Link key={d.id} href={`/dispatch`}
-                            className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm">
-                            <span className="text-gray-800 dark:text-white">{d.customer_name}</span>
-                            <span className="text-gray-500 dark:text-gray-400">{d.destination}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="hidden lg:block w-full max-w-xl relative">
+            {/* Search feature has been removed */}
           </div>
         </div>
 
