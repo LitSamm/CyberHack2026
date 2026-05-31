@@ -61,7 +61,7 @@ const MATERIAL_NAMES = [
 const QC_STATUSES = ['pending', 'approved', 'approved', 'approved', 'rejected'];
 const LOT_STATUSES = ['queued', 'in_production', 'completed', 'dispatched'];
 const PRIORITIES = ['urgent', 'normal', 'normal', 'low'];
-const HAZARD_TYPES = [null, null, null, 'IBC', 'IPPC'];
+const HAZARD_TYPES = [null, null, null, 'ibc', 'ippc'];
 const ZONES = ['A', 'B', 'C'];
 const DISPATCH_STATUSES = ['prepared', 'shipped', 'delivered'];
 
@@ -84,24 +84,30 @@ async function seedAll() {
   // 1. Create auth users + profiles
   console.log('👥 Creating users...');
   const userIds = {};
+  const { data: authUsersData, error: listUsersError } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  if (listUsersError) throw listUsersError;
+  const authUsersByEmail = new Map(authUsersData.users.map(user => [user.email, user]));
   for (const u of USERS_DATA) {
-    // Check if exists
     const { data: existing } = await supabase.from('users').select('id').eq('email', u.email).single();
     if (existing) {
       userIds[u.email] = existing.id;
       console.log(`  ↳ Skipping existing user: ${u.email}`);
       continue;
     }
-    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
-      email: u.email, password: u.password, email_confirm: true,
-    });
-    if (authErr) { console.error(`  ❌ Auth error ${u.email}:`, authErr.message); continue; }
-    const { data: profile, error: profErr } = await supabase.from('users').insert({
-      id: authData.user.id, name: u.name, email: u.email, role: u.role, is_active: true,
-    }).select().single();
-    if (profErr) { console.error(`  ❌ Profile error ${u.email}:`, profErr.message); continue; }
+    let authUser = authUsersByEmail.get(u.email);
+    if (!authUser) {
+      const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+        email: u.email, password: u.password, email_confirm: true,
+      });
+      if (authErr) throw authErr;
+      authUser = authData.user;
+    }
+    const { data: profile, error: profErr } = await supabase.from('users').upsert({
+      id: authUser.id, name: u.name, email: u.email, role: u.role, is_active: true,
+    }, { onConflict: 'id' }).select().single();
+    if (profErr) throw profErr;
     userIds[u.email] = profile.id;
-    console.log(`  ✅ ${u.name} (${u.role})`);
+    console.log(`  ✅ ${u.name} (${u.role}) profile ready`);
   }
 
   // 2. Suppliers
@@ -124,10 +130,18 @@ async function seedAll() {
     qc_status: randomItem(QC_STATUSES),
     notes: i % 4 === 0 ? 'Perlu penanganan khusus - produk sensitif suhu' : null,
   }));
-  const { data: materials, error: matErr } = await supabase
-    .from('incoming_materials').insert(materialInserts).select();
-  if (matErr) console.error('  ❌ Materials error:', matErr.message);
-  else console.log(`  ✅ ${materials.length} materials created`);
+  const { data: existingMaterials, error: existingMaterialsError } = await supabase
+    .from('incoming_materials').select('*').limit(MATERIAL_NAMES.length);
+  if (existingMaterialsError) throw existingMaterialsError;
+  let materials = existingMaterials;
+  if (materials.length === 0) {
+    const { data, error } = await supabase.from('incoming_materials').insert(materialInserts).select();
+    if (error) throw error;
+    materials = data;
+    console.log(`  ✅ ${materials.length} materials created`);
+  } else {
+    console.log(`  ↳ Reusing ${materials.length} existing materials`);
+  }
 
   // 4. Lots
   console.log('\n🏷️  Creating lots...');
@@ -143,18 +157,19 @@ async function seedAll() {
       created_by: ppicId,
     };
   });
+  const seededLotNumbers = lotInserts.map(lot => lot.lot_number);
   let lots = [];
   const { data: insertedLots, error: lotErr } = await supabase.from('lots').upsert(lotInserts, { onConflict: 'lot_number', ignoreDuplicates: true }).select();
   if (lotErr) {
     console.error('  ❌ Lots upsert error:', lotErr.message);
-    // If upsert fails, fetch existing lots so the script can continue
-    const { data: existingLots } = await supabase.from('lots').select('*').limit(15);
+    // If upsert fails, fetch only the deterministic demo lots so the script can continue.
+    const { data: existingLots } = await supabase.from('lots').select('*').in('lot_number', seededLotNumbers);
     lots = existingLots || [];
   } else {
     console.log(`  ✅ ${insertedLots?.length || 0} lots processed`);
     lots = insertedLots || [];
     if (lots.length === 0) {
-      const { data: existingLots } = await supabase.from('lots').select('*').limit(15);
+      const { data: existingLots } = await supabase.from('lots').select('*').in('lot_number', seededLotNumbers);
       lots = existingLots || [];
     }
   }
@@ -172,9 +187,15 @@ async function seedAll() {
     notes: 'Pemeriksaan standar sesuai SOP QC-001',
     checked_at: daysAgo(randomInt(0, 7)),
   }));
-  const { data: qcChecks, error: qcErr } = await supabase.from('qc_checks').insert(qcInserts).select();
-  if (qcErr) console.error('  ❌ QC error:', qcErr.message);
-  else console.log(`  ✅ ${qcChecks.length} QC checks created`);
+  const { data: existingQcChecks, error: existingQcError } = await supabase.from('qc_checks').select('lot_id').not('lot_id', 'is', null);
+  if (existingQcError) throw existingQcError;
+  const checkedLotIds = new Set(existingQcChecks.map(check => check.lot_id));
+  const newQcChecks = qcInserts.filter(check => !checkedLotIds.has(check.lot_id));
+  if (newQcChecks.length > 0) {
+    const { error } = await supabase.from('qc_checks').insert(newQcChecks);
+    if (error) throw error;
+  }
+  console.log(`  ✅ ${newQcChecks.length} QC checks created, ${qcInserts.length - newQcChecks.length} reused`);
 
   // 6. PPIC Schedules
   console.log('\n📅 Creating PPIC schedules...');
@@ -186,14 +207,20 @@ async function seedAll() {
     assigned_to: ppicId,
     notes: `Produksi batch ${lot.lot_number}`,
   }));
-  const { data: schedules, error: schedErr } = await supabase.from('ppic_schedules').insert(ppicInserts).select();
-  if (schedErr) console.error('  ❌ PPIC error:', schedErr.message);
-  else console.log(`  ✅ ${schedules.length} schedules created`);
+  const { data: existingSchedules, error: existingSchedulesError } = await supabase.from('ppic_schedules').select('lot_id');
+  if (existingSchedulesError) throw existingSchedulesError;
+  const scheduledLotIds = new Set(existingSchedules.map(schedule => schedule.lot_id));
+  const newSchedules = ppicInserts.filter(schedule => !scheduledLotIds.has(schedule.lot_id));
+  if (newSchedules.length > 0) {
+    const { error } = await supabase.from('ppic_schedules').insert(newSchedules);
+    if (error) throw error;
+  }
+  console.log(`  ✅ ${newSchedules.length} schedules created, ${ppicInserts.length - newSchedules.length} reused`);
 
   // 7. Warehouse Slots (10x3 = 30 slots across 3 zones)
   console.log('\n🏪 Creating warehouse slots...');
   const slotInserts = [];
-  const slotZoneMap = { A: 'ambient', B: 'cold', C: 'frozen' };
+  const slotZoneMap = { A: 'normal', B: 'cold_minus4', C: 'cold_minus20' };
   for (const zone of ZONES) {
     for (let row = 1; row <= 10; row++) {
       slotInserts.push({
@@ -215,9 +242,15 @@ async function seedAll() {
       slot.is_occupied = true;
     }
   });
-  const { data: wSlots, error: wsErr } = await supabase.from('warehouse_slots').insert(slotInserts).select();
-  if (wsErr) console.error('  ❌ Warehouse error:', wsErr.message);
-  else console.log(`  ✅ ${wSlots.length} warehouse slots created`);
+  const { data: existingSlots, error: existingSlotsError } = await supabase.from('warehouse_slots').select('id');
+  if (existingSlotsError) throw existingSlotsError;
+  if (existingSlots.length === 0) {
+    const { data: wSlots, error: wsErr } = await supabase.from('warehouse_slots').insert(slotInserts).select();
+    if (wsErr) throw wsErr;
+    console.log(`  ✅ ${wSlots.length} warehouse slots created`);
+  } else {
+    console.log(`  ↳ Reusing ${existingSlots.length} existing warehouse slots`);
+  }
 
   // 8. Dispatches (10 records)
   console.log('\n🚚 Creating dispatches...');
@@ -244,9 +277,15 @@ async function seedAll() {
   }));
 
   if (dispatchInserts.length > 0) {
-    const { data: dispatches, error: dispErr } = await supabase.from('dispatches').insert(dispatchInserts).select();
-    if (dispErr) console.error('  ❌ Dispatch error:', dispErr.message);
-    else console.log(`  ✅ ${dispatches.length} dispatches created`);
+    const { data: existingDispatches, error: existingDispatchError } = await supabase.from('dispatches').select('lot_id');
+    if (existingDispatchError) throw existingDispatchError;
+    const dispatchedLotIds = new Set(existingDispatches.map(dispatch => dispatch.lot_id));
+    const newDispatches = dispatchInserts.filter(dispatch => !dispatchedLotIds.has(dispatch.lot_id));
+    if (newDispatches.length > 0) {
+      const { error } = await supabase.from('dispatches').insert(newDispatches);
+      if (error) throw error;
+    }
+    console.log(`  ✅ ${newDispatches.length} dispatches created, ${dispatchInserts.length - newDispatches.length} reused`);
   } else {
     console.log('  ⚠️  No dispatched lots available for dispatch records');
   }
