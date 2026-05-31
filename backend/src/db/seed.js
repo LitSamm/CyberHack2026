@@ -61,7 +61,7 @@ const MATERIAL_NAMES = [
 const QC_STATUSES = ['pending', 'approved', 'approved', 'approved', 'rejected'];
 const LOT_STATUSES = ['queued', 'in_production', 'completed', 'dispatched'];
 const PRIORITIES = ['urgent', 'normal', 'normal', 'low'];
-const HAZARD_TYPES = [null, null, null, 'ibc', 'ippc'];
+const HAZARD_TYPES = ['none', 'none', 'none', 'ibc', 'ippc'];
 const ZONES = ['A', 'B', 'C'];
 const DISPATCH_STATUSES = ['prepared', 'shipped', 'delivered'];
 
@@ -230,7 +230,7 @@ async function seedAll() {
         temperature_zone: slotZoneMap[zone],
         is_occupied: false,
         current_lot_id: null,
-        hazard_type: zone === 'C' ? randomItem(HAZARD_TYPES) : null,
+        hazard_type: zone === 'C' ? randomItem(HAZARD_TYPES) : 'none',
       });
     }
   }

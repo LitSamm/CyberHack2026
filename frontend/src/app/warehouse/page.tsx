@@ -24,6 +24,8 @@ const HAZARD_CONFIG: Record<string, string> = {
   none: ''
 };
 
+const getHazardType = (slot: any) => slot.hazard_type || 'none';
+
 export default function WarehouseDashboard() {
   const [slots, setSlots] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
@@ -152,7 +154,7 @@ export default function WarehouseDashboard() {
       return 'bg-red-500/20 border-red-500 animate-pulse'; // Mismatch alert
     }
     
-    if (slot.hazard_type !== 'none') {
+    if (getHazardType(slot) !== 'none') {
       return 'bg-yellow-500/20 border-yellow-500/50 hover:bg-yellow-500/30';
     }
 
@@ -349,9 +351,9 @@ export default function WarehouseDashboard() {
                           </div>
                           
                           {/* Hazard Icon (Top Right) */}
-                          {slot.hazard_type !== 'none' && (
-                            <div className="absolute top-1 right-1.5 text-[10px]" title={`Hazard: ${slot.hazard_type.toUpperCase()}`}>
-                              {HAZARD_CONFIG[slot.hazard_type]}
+                          {getHazardType(slot) !== 'none' && (
+                            <div className="absolute top-1 right-1.5 text-[10px]" title={`Hazard: ${getHazardType(slot).toUpperCase()}`}>
+                              {HAZARD_CONFIG[getHazardType(slot)]}
                             </div>
                           )}
 

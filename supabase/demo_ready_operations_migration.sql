@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS public.material_storage_specs (
 ALTER TABLE public.warehouse_slots
   ADD COLUMN IF NOT EXISTS current_temperature NUMERIC;
 
+UPDATE public.warehouse_slots SET hazard_type = 'none' WHERE hazard_type IS NULL;
+ALTER TABLE public.warehouse_slots ALTER COLUMN hazard_type SET DEFAULT 'none';
+ALTER TABLE public.warehouse_slots ALTER COLUMN hazard_type SET NOT NULL;
+
 CREATE TABLE IF NOT EXISTS public.cold_chain_excursions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   slot_id UUID NOT NULL REFERENCES public.warehouse_slots(id) ON DELETE CASCADE,
