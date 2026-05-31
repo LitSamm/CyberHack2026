@@ -13,37 +13,7 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-const COLOR_MAP = {
-  orange: {
-    icon: 'bg-orange-500/20 text-orange-400',
-    border: 'border-orange-500/20',
-    value: 'text-orange-400',
-  },
-  blue: {
-    icon: 'bg-blue-500/20 text-blue-400',
-    border: 'border-blue-500/20',
-    value: 'text-blue-400',
-  },
-  green: {
-    icon: 'bg-green-500/20 text-green-400',
-    border: 'border-green-500/20',
-    value: 'text-green-400',
-  },
-  purple: {
-    icon: 'bg-purple-500/20 text-purple-400',
-    border: 'border-purple-500/20',
-    value: 'text-purple-400',
-  },
-  red: {
-    icon: 'bg-red-500/20 text-red-400',
-    border: 'border-red-500/20',
-    value: 'text-red-400',
-  },
-};
-
-export default function StatCard({ title, value, subtitle, icon: Icon, trend, color = 'orange', loading }: StatCardProps) {
-  const colors = COLOR_MAP[color];
-
+export default function StatCard({ title, value, subtitle, trend, loading }: StatCardProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 animate-pulse">

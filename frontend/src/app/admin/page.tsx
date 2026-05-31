@@ -14,11 +14,12 @@ import {
   supabaseDispatchApi,
 } from '@/lib/supabase-api';
 import { buildOperationsPipeline, getSevenDayProductionQcChart } from '@/lib/workflowDomain.js';
-import { Box, CheckCircle, Clock, Package, Grid, ArrowUp, Download, FileText, File, ChevronDown } from 'lucide-react';
+import { Box, CheckCircle, Clock, Package, Download, FileText, ChevronDown } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ExportModal, { ReportType } from '@/components/ui/ExportModal';
 import { Activity } from 'lucide-react';
+import Link from 'next/link';
 
 interface Stats {
   lots_today: number;
@@ -178,9 +179,9 @@ export default function AdminDashboard() {
             </div>
             <span className="text-xs text-slate-500">Material masuk → QC → PPIC → Gudang → Dispatch</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-8 gap-3">
             {loading ? (
-              Array.from({ length: 7 }).map((_, i) => <div key={i} className="skeleton h-20 rounded-lg" />)
+              Array.from({ length: 8 }).map((_, i) => <div key={i} className="skeleton h-20 rounded-lg" />)
             ) : pipeline.map((stage) => (
               <div key={stage.id} className={`rounded-lg border p-3 ${toneClasses[stage.tone] || toneClasses.slate}`}>
                 <div className="text-2xl font-bold leading-none">{stage.count}</div>
@@ -275,7 +276,7 @@ export default function AdminDashboard() {
                 ) : recentLots.map(lot => (
                   <tr key={lot.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                     <td className="py-3 pr-4">
-                      <span className="font-mono text-orange-400 font-semibold text-xs">{lot.lot_number}</span>
+                      <Link href={`/lots/${lot.id}`} className="font-mono text-orange-400 hover:text-orange-500 font-semibold text-xs">{lot.lot_number}</Link>
                     </td>
                     <td className="py-3 pr-4 text-gray-700 dark:text-gray-300">{lot.incoming_materials?.material_name || '-'}</td>
                     <td className="py-3 pr-4"><StatusBadge status={lot.status} /></td>

@@ -50,3 +50,19 @@ test('restoreStoredAppSession clears custom login state when Supabase session is
   assert.equal(values.has('aromos_token'), false);
   assert.equal(values.has('aromos_user'), false);
 });
+
+test('establishSupabaseSession rejects a backend token from a different Supabase project', async () => {
+  const supabase = {
+    auth: {
+      setSession: async () => ({ error: new Error('Invalid JWT') }),
+    },
+  };
+
+  await assert.rejects(
+    establishSupabaseSession(supabase, {
+      access_token: 'wrong-project-token',
+      refresh_token: 'wrong-project-refresh-token',
+    }),
+    /Sesi Supabase tidak dapat disinkronkan: Invalid JWT/
+  );
+});

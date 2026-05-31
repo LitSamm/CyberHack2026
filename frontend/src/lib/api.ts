@@ -42,8 +42,3 @@ export const auditApi = {
   getAll: (params?: any) => api.get('/api/audit-logs', { params }),
   exportCsv: () => api.get('/api/audit-logs/export', { responseType: 'blob' }),
 };
-
-// ── Search ────────────────────────────────────────────
-export const searchApi = {
-  search: (q: string) => api.get('/api/search', { params: { q } }),
-};

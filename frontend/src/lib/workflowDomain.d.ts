@@ -28,3 +28,7 @@ export interface ChartPoint {
 export function buildOperationsPipeline(input: PipelineInput): PipelineStage[];
 export function getSevenDayProductionQcChart(input: ChartInput): ChartPoint[];
 export function getLotStatusAfterWarehouseRelease(currentStatus: string): string;
+export function getDispatchEffects(movementType: string, status: string): {
+  releaseSlot: boolean;
+  lotStatus: string | null;
+};

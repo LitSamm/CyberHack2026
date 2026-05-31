@@ -9,7 +9,7 @@ AromOS adalah sistem manajemen operasi terintegrasi untuk Sima Arome, produsen e
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router) + TypeScript |
+| Frontend | Next.js 16 (App Router) + TypeScript |
 | Styling | Tailwind CSS v4 + Custom CSS |
 | UI Library | Radix UI primitives + custom components |
 | Charts | Recharts |
@@ -53,12 +53,15 @@ python -m pip install -r requirements.txt
 
 1. Buat proyek baru di https://supabase.com
 2. Buka **SQL Editor** di dashboard Supabase
-3. Copy dan jalankan konten dari `supabase/schema.sql`
+3. Jalankan SQL berikut secara berurutan:
+   - `supabase/schema.sql`
+   - `supabase/material_qc_migration.sql`
+   - `supabase/notifications_schema.sql`
+   - `supabase/demo_ready_operations_migration.sql`
 4. Catat:
    - Project URL: `https://xxx.supabase.co`
    - Anon Key (dari Settings → API)
    - Service Role Key (dari Settings → API)
-   - JWT Secret (dari Settings → API)
 
 ### 3. Environment Variables
 
@@ -70,17 +73,20 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_CV_SERVICE_URL=http://localhost:8000
 GEMINI_API_KEY=your-gemini-api-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-untuk-ai-assistant
+CRON_SECRET=replace-with-a-long-random-secret
 ```
 
 **Backend** — buat file `backend/.env`:
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
 PORT=4000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
+CRON_SECRET=replace-with-the-same-long-random-secret
 ```
+
+> Security note: never commit a Supabase service-role key. If a key has ever been committed, rotate it from the Supabase dashboard before running the application.
 
 ### 4. Seed Data
 
@@ -115,6 +121,23 @@ python cv_server.py
 
 Buka http://localhost:3000
 
+### 6. Alur Demo Utama
+
+```text
+Material intake
+→ quarantine receiving
+→ raw-material QC
+→ PPIC membuat lot dan menjalankan produksi
+→ awaiting finished-product QC
+→ extract / powder release QC
+→ warehouse slot + cold-chain sensor simulator
+→ sample dispatch atau bulk dispatch
+```
+
+- Sample dispatch mencatat pergerakan sampel tanpa mengosongkan slot lot.
+- Bulk dispatch melepas slot ketika status berubah menjadi `shipped`.
+- Klik nomor lot pada dashboard admin untuk membuka Digital Lot Passport.
+
 ---
 
 ## 🔑 Akun Demo
@@ -128,7 +151,9 @@ Buka http://localhost:3000
 
 ---
 
-## 📡 API Endpoints
+## 📡 API dan RPC
+
+Mutasi operasional berjalan melalui Supabase RPC agar perubahan status, audit trail, dan validasi role diproses atomik di database. Backend Express hanya menangani kebutuhan administratif yang masih memerlukan service-role key.
 
 ### Auth
 ```
@@ -145,71 +170,24 @@ PUT    /api/users/:id          Update user
 DELETE /api/users/:id          Deactivate user
 ```
 
-### Suppliers
-```
-GET    /api/suppliers          List supplier
-POST   /api/suppliers          Tambah supplier
-PUT    /api/suppliers/:id      Update supplier
-```
-
-### Incoming Materials
-```
-GET    /api/materials          List material (?status=pending|approved|rejected)
-GET    /api/materials/:id      Detail material
-POST   /api/materials          Tambah material masuk
-PUT    /api/materials/:id      Update status/catatan
-```
-
-### Lots
-```
-GET    /api/lots               List lot (?status=queued|in_production|...)
-GET    /api/lots/:id           Detail lot (dengan joins)
-POST   /api/lots               Buat lot (auto-generate nomor SA-YYYYMMDD-XXX)
-PUT    /api/lots/:id           Update lot
-```
-
-### QC
-```
-GET    /api/qc                 List QC checks (?lot_id, ?result, ?date)
-POST   /api/qc                 Submit QC check (auto update lot status)
-PUT    /api/qc/:id             Update QC check
-GET    /api/qc/alerts/pending-24h  Material pending > 24 jam
-```
-
-### PPIC
-```
-GET    /api/ppic/schedules     List jadwal (?status, ?priority)
-POST   /api/ppic/schedules     Buat jadwal
-PUT    /api/ppic/schedules/:id Update jadwal / pindah kolom Kanban
-DELETE /api/ppic/schedules/:id Hapus jadwal
-```
-
-### Warehouse
-```
-GET    /api/warehouse/slots    List slot (?zone, ?is_occupied, ?temperature_zone)
-PUT    /api/warehouse/slots/:id Assign/release lot dari slot
-GET    /api/warehouse/stats    Statistik kapasitas gudang
-```
-
-### Dispatch
-```
-GET    /api/dispatch           List pengiriman (?status)
-POST   /api/dispatch           Buat pengiriman (auto update lot → dispatched)
-PUT    /api/dispatch/:id       Update status pengiriman
-```
-
 ### Audit Trail (Admin only)
 ```
 GET    /api/audit-logs         List log (?user_id, ?action, ?table_name, ?from, ?to)
 GET    /api/audit-logs/export  Export CSV
 ```
 
-### Dashboard & Search
+### Mutasi Operasional (Supabase RPC)
 ```
-GET    /api/dashboard/stats         Ringkasan statistik
-GET    /api/dashboard/recent-activity  Aktivitas terbaru
-GET    /api/dashboard/notifications    Notifikasi pending + overdue
-GET    /api/search?q=...              Pencarian global (lots, materials, dispatches)
+receive_material
+submit_raw_material_qc
+create_ppic_schedule
+move_ppic_schedule
+submit_finished_product_qc
+assign_warehouse_slot
+release_warehouse_slot
+create_dispatch
+advance_dispatch
+record_sensor_reading
 ```
 
 ---
@@ -218,7 +196,7 @@ GET    /api/search?q=...              Pencarian global (lots, materials, dispatc
 
 ```
 aromOS/
-├── frontend/                    ← Next.js 14 App
+├── frontend/                    ← Next.js 16 App
 │   └── src/
 │       ├── app/
 │       │   ├── login/page.tsx   ← Login page

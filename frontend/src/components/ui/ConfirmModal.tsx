@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import { CloseIcon, AlertIcon } from '@/icons';
 
 import { cn } from '@/lib/utils';

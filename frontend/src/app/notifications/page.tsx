@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseNotificationsApi } from '@/lib/supabase-api';
@@ -17,28 +17,28 @@ export default function NotificationsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const data = await supabaseNotificationsApi.getAll();
       setNotifications(data || []);
-    } catch (err) {
+    } catch {
       toast.error('Gagal memuat notifikasi');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const markAllRead = async () => {
     try {
       await supabaseNotificationsApi.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       toast.success('Semua ditandai dibaca');
-    } catch (err) {}
+    } catch {}
   };
 
   const deleteAll = async () => {
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
       setNotifications([]);
       toast.success('Notifikasi berhasil dihapus');
       setShowConfirm(false);
-    } catch (err) {}
+    } catch {}
     setDeleting(false);
   };
 

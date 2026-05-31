@@ -22,7 +22,7 @@ const QUICK_QUESTIONS = [
 ];
 
 export default function AIAssistantPage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function AIAssistantPage() {
       if (history) {
         setMessages(JSON.parse(history));
       }
-    } catch (e) {
+    } catch {
       console.error('Failed to load chat history');
     }
   }, []);
@@ -67,7 +67,7 @@ export default function AIAssistantPage() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
         body: JSON.stringify({ message: text }),
       });
 

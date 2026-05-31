@@ -7,18 +7,18 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabasePpicApi, supabaseMaterialsApi } from '@/lib/supabase-api';
-import { createClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
 
 import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const COLUMNS = [
   { id: 'queued', label: 'Antri', color: 'border-slate-500' },
   { id: 'in_production', label: 'Produksi', color: 'border-blue-500' },
-  { id: 'completed', label: 'Selesai', color: 'border-green-500' },
-  { id: 'dispatched', label: 'Dikirim', color: 'border-purple-500' },
+  { id: 'awaiting_finished_qc', label: 'Menunggu QC Produk Jadi', color: 'border-yellow-500' },
+  { id: 'completed', label: 'Released QC', color: 'border-green-500' },
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -26,17 +26,6 @@ const PRIORITY_COLORS: Record<string, string> = {
   normal: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   low: 'bg-slate-500/20 text-gray-500 dark:text-gray-400 border-slate-500/30',
 };
-
-// Auto-generate lot number: SA-YYYYMMDD-XXX
-async function generateLotNumber(sb: any) {
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-  const prefix = `SA-${dateStr}-`;
-  const { data } = await sb.from('lots').select('lot_number').like('lot_number', `${prefix}%`).order('lot_number', { ascending: false }).limit(1);
-  const lastSeq = data && data.length > 0 ? parseInt(data[0].lot_number.split('-')[2]) : 0;
-  const seq = String(lastSeq + 1).padStart(3, '0');
-  return `${prefix}${seq}`;
-}
 
 export default function PPICDashboard() {
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -80,13 +69,13 @@ export default function PPICDashboard() {
     if (!dragging) return;
     const schedule = schedules.find(s => s.id === dragging);
     if (!schedule || schedule.status === targetStatus) { setDragging(null); return; }
-    const sb = createClient();
+    if (targetStatus === 'completed') {
+      toast.error('Release lot selesai hanya dapat dilakukan oleh QC produk jadi');
+      setDragging(null);
+      return;
+    }
     try {
-      await sb.from('ppic_schedules').update({ status: targetStatus }).eq('id', dragging);
-      if (schedule.lot_id) {
-        const statusMap: Record<string, string> = { queued: 'queued', in_production: 'in_production', completed: 'completed', dispatched: 'dispatched' };
-        if (statusMap[targetStatus]) await sb.from('lots').update({ status: statusMap[targetStatus] }).eq('id', schedule.lot_id);
-      }
+      await supabasePpicApi.moveSchedule(dragging, targetStatus);
       setSchedules(prev => prev.map(s => s.id === dragging ? { ...s, status: targetStatus } : s));
       toast.success(`Lot dipindah ke ${COLUMNS.find(c => c.id === targetStatus)?.label}`);
     } catch { toast.error('Gagal update status'); }
@@ -96,34 +85,14 @@ export default function PPICDashboard() {
   const handleCreateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const sb = createClient();
     try {
-      // Get current user id
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) throw new Error('Tidak terautentikasi');
-      // Generate lot number
-      const lotNumber = await generateLotNumber(sb);
-      // Create lot
-      const { data: lot, error: lotErr } = await sb.from('lots').insert({
-        lot_number: lotNumber,
+      await supabasePpicApi.createSchedule({
         material_id: formData.material_id,
-        production_date: formData.scheduled_date,
-        status: 'queued',
-        created_by: user.id,
-        notes: formData.notes,
-      }).select().single();
-      if (lotErr) throw lotErr;
-      // Create schedule
-      const { error: schedErr } = await sb.from('ppic_schedules').insert({
-        lot_id: lot.id,
         scheduled_date: formData.scheduled_date,
         priority: formData.priority,
-        status: 'queued',
-        assigned_to: user.id,
         notes: formData.notes,
       });
-      if (schedErr) throw schedErr;
-      toast.success(`✅ Lot ${lotNumber} dijadwalkan!`);
+      toast.success('Lot produksi berhasil dibuat dan dijadwalkan');
       setShowForm(false);
       setFormData({ material_id: '', scheduled_date: '', priority: 'normal', notes: '' });
       fetchData();
@@ -136,9 +105,8 @@ export default function PPICDashboard() {
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
-    const sb = createClient();
     try {
-      await sb.from('ppic_schedules').delete().eq('id', confirmDelete);
+      await supabasePpicApi.cancelSchedule(confirmDelete);
       toast.success('Jadwal dihapus');
       setConfirmDelete(null);
       fetchData();
@@ -197,9 +165,9 @@ export default function PPICDashboard() {
                         dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : ''
                       )}>
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <span className="font-mono text-orange-400 text-xs font-semibold">
+                        <Link href={`/lots/${s.lot_id}`} className="font-mono text-orange-400 hover:text-orange-500 text-xs font-semibold">
                           {s.lots?.lot_number || 'SA-???'}
-                        </span>
+                        </Link>
                         <button onClick={() => setConfirmDelete(s.id)}
                           className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
                           <Trash2 className="w-4 h-4" />
@@ -251,7 +219,7 @@ export default function PPICDashboard() {
                 {schedules.map(s => (
                   <tr key={s.id} className="border-b border-gray-200 dark:border-gray-800/50 table-row-hover">
                     <td className="py-3 pr-4">
-                      <span className="font-mono text-orange-400 font-semibold text-xs">{s.lots?.lot_number}</span>
+                      <Link href={`/lots/${s.lot_id}`} className="font-mono text-orange-400 hover:text-orange-500 font-semibold text-xs">{s.lots?.lot_number}</Link>
                     </td>
                     <td className="py-3 pr-4 text-gray-700 dark:text-gray-300 text-xs">{s.lots?.incoming_materials?.material_name || '-'}</td>
                     <td className="py-3 pr-4 text-gray-500 dark:text-gray-400 text-xs">{s.scheduled_date ? formatDate(s.scheduled_date) : '-'}</td>

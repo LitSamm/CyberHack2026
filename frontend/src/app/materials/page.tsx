@@ -5,7 +5,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseSuppliersApi } from '@/lib/supabase-api';
-import { createClient } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
 import { PackagePlus, Plus, Search, X, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -68,32 +67,14 @@ export default function MaterialIntakePage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const sb = createClient();
     try {
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) throw new Error('Tidak terautentikasi');
-
-      const { error } = await sb.from('incoming_materials').insert({
+      await supabaseMaterialsApi.receive({
         supplier_id: formData.supplier_id,
         material_name: formData.material_name,
         quantity: Number(formData.quantity),
         unit: formData.unit,
         received_date: formData.received_date || new Date().toISOString(),
-        received_by: user.id,
-        qc_status: 'pending',
-        notes: formData.notes || null,
-      });
-      if (error) throw error;
-
-      await sb.from('audit_logs').insert({
-        user_id: user.id,
-        action: 'INSERT',
-        table_name: 'incoming_materials',
-        new_value: {
-          material_name: formData.material_name,
-          quantity: Number(formData.quantity),
-          unit: formData.unit,
-        },
+        notes: formData.notes || undefined,
       });
 
       toast.success('Material masuk dicatat dan dikirim ke antrian QC');
@@ -110,9 +91,8 @@ export default function MaterialIntakePage() {
   const handleDelete = async () => {
     if (!confirmDelete) return;
     setDeleting(true);
-    const sb = createClient();
     try {
-      await sb.from('incoming_materials').delete().eq('id', confirmDelete);
+      await supabaseMaterialsApi.cancelIntake(confirmDelete);
       toast.success('Penerimaan material dibatalkan');
       setConfirmDelete(null);
       fetchData();

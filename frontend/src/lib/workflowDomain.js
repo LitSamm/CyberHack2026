@@ -30,6 +30,7 @@ function buildOperationsPipeline({ materials = [], lots = [], slots = [], dispat
   ).length;
   const queued = lots.filter((lot) => lot.status === 'queued').length;
   const inProduction = lots.filter((lot) => lot.status === 'in_production').length;
+  const awaitingFinishedQc = lots.filter((lot) => lot.status === 'awaiting_finished_qc').length;
   const completedUnstored = lots.filter(
     (lot) => lot.status === 'completed' && !storedLotIds.has(lot.id) && !activeDispatchLotIds.has(lot.id)
   ).length;
@@ -41,6 +42,7 @@ function buildOperationsPipeline({ materials = [], lots = [], slots = [], dispat
     { id: 'awaiting_schedule', label: 'Approved, Belum Dijadwalkan', count: awaitingSchedule, tone: 'green' },
     { id: 'queued', label: 'Antri Produksi', count: queued, tone: 'slate' },
     { id: 'in_production', label: 'Sedang Produksi', count: inProduction, tone: 'blue' },
+    { id: 'awaiting_finished_qc', label: 'Menunggu QC Produk Jadi', count: awaitingFinishedQc, tone: 'yellow' },
     { id: 'completed_unstored', label: 'Selesai, Belum Masuk Gudang', count: completedUnstored, tone: 'orange' },
     { id: 'stored', label: 'Tersimpan di Gudang', count: stored, tone: 'purple' },
     { id: 'dispatching', label: 'Proses Pengiriman', count: dispatching, tone: 'cyan' },
@@ -79,8 +81,16 @@ function getLotStatusAfterWarehouseRelease(currentStatus) {
   return currentStatus;
 }
 
+function getDispatchEffects(movementType, status) {
+  if (movementType === 'bulk' && status === 'shipped') {
+    return { releaseSlot: true, lotStatus: 'dispatched' };
+  }
+  return { releaseSlot: false, lotStatus: null };
+}
+
 module.exports = {
   buildOperationsPipeline,
   getSevenDayProductionQcChart,
   getLotStatusAfterWarehouseRelease,
+  getDispatchEffects,
 };

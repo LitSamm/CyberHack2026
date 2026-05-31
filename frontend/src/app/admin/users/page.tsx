@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { UserIcon, GridIcon, PencilIcon, CloseIcon, CheckLineIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { usersApi } from '@/lib/api';
@@ -34,7 +33,7 @@ export default function UsersPage() {
     try {
       const { data } = await usersApi.getAll();
       setUsers(data);
-    } catch (err) {
+    } catch {
       toast.error('Gagal memuat data user');
     } finally {
       setLoading(false);

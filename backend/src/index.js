@@ -6,17 +6,7 @@ const morgan = require('morgan');
 
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
-const suppliersRoutes = require('./routes/suppliers');
-const materialsRoutes = require('./routes/materials');
-const lotsRoutes = require('./routes/lots');
-const qcRoutes = require('./routes/qc');
-const ppicRoutes = require('./routes/ppic');
-const warehouseRoutes = require('./routes/warehouse');
-const dispatchRoutes = require('./routes/dispatch');
 const auditRoutes = require('./routes/audit');
-const dashboardRoutes = require('./routes/dashboard');
-const searchRoutes = require('./routes/search');
-const seedRoutes = require('./routes/seed');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -34,17 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/suppliers', suppliersRoutes);
-app.use('/api/materials', materialsRoutes);
-app.use('/api/lots', lotsRoutes);
-app.use('/api/qc', qcRoutes);
-app.use('/api/ppic', ppicRoutes);
-app.use('/api/warehouse', warehouseRoutes);
-app.use('/api/dispatch', dispatchRoutes);
 app.use('/api/audit-logs', auditRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/seed', seedRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

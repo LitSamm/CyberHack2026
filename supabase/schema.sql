@@ -155,16 +155,17 @@ ALTER TABLE public.warehouse_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dispatches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Allow service role full access (backend uses service role key)
-CREATE POLICY "Service role full access" ON public.users FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.suppliers FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.incoming_materials FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.lots FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.qc_checks FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.ppic_schedules FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.warehouse_slots FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.dispatches FOR ALL USING (true);
-CREATE POLICY "Service role full access" ON public.audit_logs FOR ALL USING (true);
+-- Temporary authenticated access for initial setup. Apply
+-- demo_ready_operations_migration.sql immediately to install role-specific policies.
+CREATE POLICY "Service role full access" ON public.users FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.suppliers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.incoming_materials FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.lots FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.qc_checks FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.ppic_schedules FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.warehouse_slots FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.dispatches FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON public.audit_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- =============================================
 -- INDEXES

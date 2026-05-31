@@ -7,6 +7,12 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 // This endpoint can be called by Vercel Cron or manually to scan for overdue QC
 export async function GET(req: Request) {
   try {
+    const expectedSecret = process.env.CRON_SECRET;
+    const authHeader = req.headers.get('authorization');
+    if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const sb = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
     
     const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

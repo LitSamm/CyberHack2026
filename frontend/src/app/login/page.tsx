@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Leaf, AlertCircle, Microscope, CalendarDays, Map, Truck, ShieldCheck, LineChart, Box } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Microscope, CalendarDays, Map, Truck, ShieldCheck, LineChart, Box } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {

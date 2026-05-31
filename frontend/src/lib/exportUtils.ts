@@ -17,7 +17,7 @@ async function logExport(action: string, rowCount: number) {
       action: action,
       table_name: 'exports',
       record_id: 'export',
-      details: { rowCount, timestamp: new Date().toISOString() }
+      new_value: { rowCount, timestamp: new Date().toISOString() }
     });
   } catch (error) {
     console.error('Failed to log export:', error);
@@ -197,10 +197,6 @@ export async function exportWarehouseSnapshot() {
 
   const total = records.length;
   const occupied = records.filter(s => s.is_occupied).length;
-  const frozen = records.filter(s => s.temperature_zone === 'cold_minus20').length;
-  const chill = records.filter(s => s.temperature_zone === 'cold_minus4').length;
-  const normal = records.filter(s => s.temperature_zone === 'normal').length;
-
   const doc = new jsPDF();
   doc.setFontSize(20);
   doc.setTextColor(249, 115, 22);

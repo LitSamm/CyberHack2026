@@ -6,7 +6,7 @@ import { Send, Plus, X, Package } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { supabaseDispatchApi, supabaseLotsApi } from '@/lib/supabase-api';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,8 @@ export default function DispatchPage() {
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState('');
   const [formData, setFormData] = useState({
-    lot_id: '', customer_name: '', destination: '', dispatch_date: '', notes: '',
+    lot_id: '', customer_name: '', destination: '', movement_type: 'sample' as 'sample' | 'bulk',
+    quantity: '', unit: 'gram', dispatch_date: '', notes: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -58,11 +59,12 @@ export default function DispatchPage() {
     try {
       await supabaseDispatchApi.create({
         ...formData,
+        quantity: Number(formData.quantity),
         dispatch_date: formData.dispatch_date || new Date().toISOString(),
       });
       toast.success('Pengiriman berhasil dibuat');
       setShowForm(false);
-      setFormData({ lot_id: '', customer_name: '', destination: '', dispatch_date: '', notes: '' });
+      setFormData({ lot_id: '', customer_name: '', destination: '', movement_type: 'sample', quantity: '', unit: 'gram', dispatch_date: '', notes: '' });
       fetchData();
     } catch (err: any) {
       toast.error(err?.message || 'Gagal membuat pengiriman');
@@ -75,7 +77,7 @@ export default function DispatchPage() {
     const nextStatus = STATUS_NEXT[dispatch.status];
     if (!nextStatus) return;
     try {
-      await supabaseDispatchApi.update(dispatch.id, { status: nextStatus });
+      await supabaseDispatchApi.advance(dispatch.id, nextStatus);
       toast.success(`Status diperbarui: ${STATUS_LABELS[nextStatus]}`);
       fetchData();
     } catch { toast.error('Gagal update status'); }
@@ -139,7 +141,7 @@ export default function DispatchPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800/30">
-                {['Lot', 'Customer', 'Tujuan', 'Tanggal', 'Status', 'Dikirim Oleh', 'Aksi'].map(h => (
+                {['Lot', 'Jenis', 'Jumlah', 'Customer', 'Tujuan', 'Tanggal', 'Status', 'Dikirim Oleh', 'Aksi'].map(h => (
                   <th key={h} className="text-left text-xs text-gray-400 dark:text-gray-500 font-semibold py-3 px-4 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -148,7 +150,7 @@ export default function DispatchPage() {
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b border-gray-200 dark:border-gray-800/50">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <td key={j} className="py-3 px-4"><div className="skeleton h-4 rounded" /></td>
                     ))}
                   </tr>
@@ -158,6 +160,8 @@ export default function DispatchPage() {
                   <td className="py-3 px-4">
                     <span className="font-mono text-orange-400 text-xs font-semibold">{d.lots?.lot_number}</span>
                   </td>
+                  <td className="py-3 px-4 text-xs uppercase text-blue-400 font-semibold">{d.movement_type || 'bulk'}</td>
+                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">{d.quantity || '-'} {d.unit || ''}</td>
                   <td className="py-3 px-4 text-gray-800 dark:text-white/90 font-medium text-sm">{d.customer_name}</td>
                   <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">{d.destination}</td>
                   <td className="py-3 px-4 text-gray-400 dark:text-gray-500 text-xs">{formatDate(d.dispatch_date)}</td>
@@ -206,6 +210,31 @@ export default function DispatchPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Jenis Pergerakan</label>
+                <select value={formData.movement_type} onChange={e => setFormData(p => ({ ...p, movement_type: e.target.value as 'sample' | 'bulk' }))}
+                  className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500">
+                  <option value="sample">Sample Customer</option>
+                  <option value="bulk">Bulk Shipment</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Jumlah</label>
+                  <input type="number" min="0.01" step="0.01" value={formData.quantity} onChange={e => setFormData(p => ({ ...p, quantity: e.target.value }))} required
+                    className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Unit</label>
+                  <select value={formData.unit} onChange={e => setFormData(p => ({ ...p, unit: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-white/90 text-sm focus:border-orange-500">
+                    <option value="gram">gram</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="liter">liter</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1.5">Nama Customer</label>

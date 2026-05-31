@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { Map, Download, AlertTriangle, ThermometerSnowflake, PackagePlus, Box, X, Info, ArrowRight } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import StatCard from '@/components/ui/StatCard';
 import { supabaseWarehouseApi, supabaseLotsApi } from '@/lib/supabase-api';
 import { createClient } from '@/lib/supabase';
 
 import ExportModal from '@/components/ui/ExportModal';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const TEMP_ZONE_CONFIG: Record<string, { label: string; text: string; badgeBg: string; badgeBorder: string; iconBg: string; iconBorder: string }> = {
   normal: { label: 'Normal (Ambient)', text: 'text-green-500', badgeBg: 'bg-green-500/20', badgeBorder: 'border-green-500/30', iconBg: 'bg-green-500/20', iconBorder: 'border-green-500/50' },
@@ -22,14 +22,6 @@ const HAZARD_CONFIG: Record<string, string> = {
   ibc: '🟡',
   ippc: '🟠',
   none: ''
-};
-
-// Mock function to determine required temp based on material name (since it's not in schema)
-const getRequiredTemp = (materialName: string = '') => {
-  const name = materialName.toLowerCase();
-  if (name.includes('ekstrak') || name.includes('liquid')) return 'cold_minus4';
-  if (name.includes('frozen') || name.includes('beku') || name.includes('kultur')) return 'cold_minus20';
-  return 'normal';
 };
 
 export default function WarehouseDashboard() {
@@ -45,17 +37,33 @@ export default function WarehouseDashboard() {
   
   const [mismatches, setMismatches] = useState<any[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [storageSpecs, setStorageSpecs] = useState<any[]>([]);
+  const [excursions, setExcursions] = useState<any[]>([]);
+  const [sensorTemperature, setSensorTemperature] = useState('');
+
+  const getStorageSpec = useCallback((materialName: string = '') => {
+    return storageSpecs.find(spec => spec.material_name.toLowerCase() === materialName.toLowerCase()) || {
+      required_temperature_zone: 'normal',
+      min_temperature: 15,
+      max_temperature: 30,
+      hazard_type: 'none',
+    };
+  }, [storageSpecs]);
 
   const fetchData = useCallback(async () => {
     try {
-      const [slotsData, statsData, lotsData] = await Promise.all([
+      const [slotsData, statsData, lotsData, specsData, excursionData] = await Promise.all([
         supabaseWarehouseApi.getSlots(),
         supabaseWarehouseApi.getStats(),
         supabaseLotsApi.getAll({ status: 'completed' }), // Unassigned completed lots
+        supabaseWarehouseApi.getStorageSpecs(),
+        supabaseWarehouseApi.getExcursions(),
       ]);
       
       setSlots(slotsData || []);
       setStats(statsData);
+      setStorageSpecs(specsData || []);
+      setExcursions(excursionData || []);
       
       // Filter out lots that are already in the warehouse
       const occupiedLotIds = slotsData?.filter(s => s.is_occupied).map(s => s.current_lot_id) || [];
@@ -65,7 +73,7 @@ export default function WarehouseDashboard() {
       // Detect temp mismatches
       const detectedMismatches = (slotsData || []).filter(s => {
         if (!s.is_occupied || !s.lots) return false;
-        const reqTemp = getRequiredTemp(s.lots.incoming_materials?.material_name);
+        const reqTemp = (specsData || []).find(spec => spec.material_name.toLowerCase() === (s.lots.incoming_materials?.material_name || '').toLowerCase())?.required_temperature_zone || 'normal';
         return reqTemp !== s.temperature_zone;
       });
       setMismatches(detectedMismatches);
@@ -92,36 +100,11 @@ export default function WarehouseDashboard() {
     return () => { sb.removeChannel(channel); };
   }, [fetchData]);
 
-  const logAudit = async (action: string, recordId: string, oldVal: any, newVal: any) => {
-    try {
-      const sb = createClient();
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return;
-      await sb.from('audit_logs').insert({
-        user_id: user.id,
-        action,
-        table_name: 'warehouse_slots',
-        record_id: recordId,
-        old_value: oldVal,
-        new_value: newVal
-      });
-    } catch (e) {
-      console.error('Failed to log audit', e);
-    }
-  };
-
   const handleAssignLot = async () => {
     if (!selectedSlot || !assignLotId) return;
     setSaving(true);
-    const sb = createClient();
     try {
-      await sb.from('warehouse_slots').update({
-        current_lot_id: assignLotId,
-        is_occupied: true,
-        last_updated: new Date().toISOString()
-      }).eq('id', selectedSlot.id);
-      
-      await logAudit('Assign Lot to Slot', selectedSlot.id, { occupied: false }, { occupied: true, lot_id: assignLotId });
+      await supabaseWarehouseApi.assignSlot(selectedSlot.id, assignLotId);
       
       toast.success(`Lot berhasil ditempatkan di ${selectedSlot.slot_code}`);
       setSelectedSlot(null);
@@ -137,17 +120,8 @@ export default function WarehouseDashboard() {
   const handleRemoveLot = async () => {
     if (!selectedSlot) return;
     setSaving(true);
-    const sb = createClient();
     try {
-      const lotId = selectedSlot.current_lot_id;
-      // Empty the slot
-      await sb.from('warehouse_slots').update({
-        current_lot_id: null,
-        is_occupied: false,
-        last_updated: new Date().toISOString()
-      }).eq('id', selectedSlot.id);
-      
-      await logAudit('Remove Lot from Slot', selectedSlot.id, { occupied: true, lot_id: lotId }, { occupied: false });
+      await supabaseWarehouseApi.releaseSlot(selectedSlot.id);
 
       toast.success('Lot dikeluarkan dari slot. Buat dispatch untuk mencatat pengiriman.');
       setSelectedSlot(null);
@@ -155,6 +129,21 @@ export default function WarehouseDashboard() {
       toast.error('Gagal mengeluarkan lot'); 
     } finally { 
       setSaving(false); 
+    }
+  };
+
+  const handleSensorReading = async () => {
+    if (!selectedSlot || sensorTemperature === '') return;
+    setSaving(true);
+    try {
+      await supabaseWarehouseApi.recordSensorReading(selectedSlot.id, Number(sensorTemperature));
+      toast.success('Pembacaan sensor dicatat');
+      setSensorTemperature('');
+      await fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal mencatat sensor');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -189,7 +178,7 @@ export default function WarehouseDashboard() {
     gridByRow[r] = slots.filter(s => s.zone_row === r).sort((a, b) => a.zone_col - b.zone_col);
   });
 
-  const selectedLotTempReq = assignLotId ? getRequiredTemp(availableLots.find(l => l.id === assignLotId)?.incoming_materials?.material_name) : null;
+  const selectedLotTempReq = assignLotId ? getStorageSpec(availableLots.find(l => l.id === assignLotId)?.incoming_materials?.material_name).required_temperature_zone : null;
   const showTempWarning = selectedLotTempReq && selectedSlot && selectedLotTempReq !== selectedSlot.temperature_zone;
 
   const coldChainSlots = slots.filter(s => s.temperature_zone !== 'normal');
@@ -228,11 +217,27 @@ export default function WarehouseDashboard() {
                 <ul className="list-disc list-inside mt-1">
                   {mismatches.map(m => (
                     <li key={m.id}>
-                      Slot {m.slot_code} ({m.lots?.lot_number}) — Seharusnya: {TEMP_ZONE_CONFIG[getRequiredTemp(m.lots?.incoming_materials?.material_name)]?.label}
+                      Slot {m.slot_code} ({m.lots?.lot_number}) — Seharusnya: {TEMP_ZONE_CONFIG[getStorageSpec(m.lots?.incoming_materials?.material_name).required_temperature_zone]?.label}
                     </li>
                   ))}
                 </ul>
               </div>
+            </div>
+          </div>
+        )}
+
+        {excursions.filter(excursion => !excursion.resolved_at).length > 0 && (
+          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-cyan-500">
+              <ThermometerSnowflake className="h-4 w-4" />
+              Excursion suhu aktif
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {excursions.filter(excursion => !excursion.resolved_at).map(excursion => (
+                <span key={excursion.id} className="rounded-md border border-cyan-500/20 bg-white/60 px-2 py-1 text-xs text-gray-700 dark:bg-gray-900/40 dark:text-gray-300">
+                  {excursion.warehouse_slots?.slot_code}: {excursion.measured_temperature}°C
+                </span>
+              ))}
             </div>
           </div>
         )}
@@ -287,7 +292,7 @@ export default function WarehouseDashboard() {
                 <div className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Semua lot sudah dialokasikan</div>
               ) : (
                 availableLots.map(lot => {
-                  const req = getRequiredTemp(lot.incoming_materials?.material_name);
+                  const req = getStorageSpec(lot.incoming_materials?.material_name).required_temperature_zone;
                   return (
                     <div key={lot.id} className="text-xs p-2 bg-gray-100 dark:bg-gray-800/60 rounded border border-gray-200 dark:border-gray-800 flex justify-between items-center">
                       <div>
@@ -408,7 +413,7 @@ export default function WarehouseDashboard() {
               <div className="space-y-4">
                 <div className="bg-gray-100 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Lot Number</div>
-                  <div className="text-xl font-mono font-bold text-gray-800 dark:text-white/90 mb-3">{selectedSlot.lots?.lot_number}</div>
+                  <Link href={`/lots/${selectedSlot.current_lot_id}`} className="mb-3 block text-xl font-mono font-bold text-orange-500 hover:text-orange-600">{selectedSlot.lots?.lot_number}</Link>
                   
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -422,11 +427,27 @@ export default function WarehouseDashboard() {
                   </div>
                 </div>
 
+                <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-cyan-500">Cold-Chain Sensor Simulator</span>
+                    <span className="text-xs text-gray-500">{selectedSlot.current_temperature ?? '-'}°C</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="number" step="0.1" value={sensorTemperature} onChange={e => setSensorTemperature(e.target.value)}
+                      placeholder="Suhu aktual °C"
+                      className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                    <button onClick={handleSensorReading} disabled={saving || sensorTemperature === ''}
+                      className="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-medium text-white disabled:opacity-50">
+                      Catat
+                    </button>
+                  </div>
+                </div>
+
                 {mismatches.find(m => m.id === selectedSlot.id) && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
                     <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-red-400">
-                      <strong>Mismatch Suhu!</strong> Material ini memerlukan {TEMP_ZONE_CONFIG[getRequiredTemp(selectedSlot.lots?.incoming_materials?.material_name)]?.label}.
+                      <strong>Mismatch Suhu!</strong> Material ini memerlukan {TEMP_ZONE_CONFIG[getStorageSpec(selectedSlot.lots?.incoming_materials?.material_name).required_temperature_zone]?.label}.
                     </div>
                   </div>
                 )}

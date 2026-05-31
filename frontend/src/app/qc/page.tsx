@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- MJPEG streams require a plain img element. */
 
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -6,22 +7,41 @@ import StatCard from '@/components/ui/StatCard';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabaseMaterialsApi, supabaseQcApi, supabaseSuppliersApi } from '@/lib/supabase-api';
-import { createClient } from '@/lib/supabase';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { FlaskConical, AlertTriangle, CheckCircle, XCircle, Clock, X, Camera, Download, Play, Square, RotateCcw, PackagePlus } from 'lucide-react';
 import ExportModal from '@/components/ui/ExportModal';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
+function GradeSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return (
+    <div>
+      <div className="flex justify-between mb-1.5">
+        <label className="text-sm text-slate-300">{label}</label>
+        <span className={`text-sm font-bold ${value >= 4 ? 'text-green-400' : value === 3 ? 'text-yellow-400' : 'text-red-400'}`}>
+          {value}/5
+        </span>
+      </div>
+      <input type="range" min={1} max={5} value={value} onChange={event => onChange(Number(event.target.value))}
+        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-orange-500" />
+      <div className="flex justify-between text-xs text-slate-600 mt-1">
+        <span>Buruk</span><span>Sangat Baik</span>
+      </div>
+    </div>
+  );
+}
+
 export default function QCDashboard() {
   const { user: authUser } = useAuth();
   const cameraServiceUrl = process.env.NEXT_PUBLIC_CV_SERVICE_URL || 'http://localhost:8000';
   const [pendingMaterials, setPendingMaterials] = useState<any[]>([]);
+  const [pendingFinishedLots, setPendingFinishedLots] = useState<any[]>([]);
   const [todayChecks, setTodayChecks] = useState<any[]>([]);
   const [overdueAlerts, setOverdueAlerts] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+  const [qcSubject, setQcSubject] = useState<'material' | 'finished_lot'>('material');
   const [showQCForm, setShowQCForm] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
   const [formData, setFormData] = useState({
@@ -45,13 +65,15 @@ export default function QCDashboard() {
     setLoading(true);
     try {
       const today = new Date().toISOString().slice(0, 10);
-      const [mats, checks, overdue, supplierData] = await Promise.all([
+      const [mats, finishedLots, checks, overdue, supplierData] = await Promise.all([
         supabaseMaterialsApi.getAll({ status: 'pending' }).catch(err => { console.warn('Mats error:', err); return []; }),
+        supabaseQcApi.getPendingFinishedLots().catch(err => { console.warn('Finished lots error:', err); return []; }),
         supabaseQcApi.getAll({ date: today }).catch(err => { console.warn('QC checks error:', err); return []; }),
         supabaseQcApi.getPending24h().catch(err => { console.warn('Overdue error:', err); return []; }),
         supabaseSuppliersApi.getAll().catch(err => { console.warn('Suppliers error:', err); return []; }),
       ]);
       setPendingMaterials(mats || []);
+      setPendingFinishedLots(finishedLots || []);
       setTodayChecks(checks || []);
       setOverdueAlerts(overdue || []);
       setSuppliers(supplierData || []);
@@ -69,31 +91,22 @@ export default function QCDashboard() {
       return;
     }
     setSaving(true);
-    const sb = createClient();
     try {
       const finalResult = result;
-
-      const { data: profile } = await sb.from('users').select('id').eq('id', authUser.id).single();
-      const payload: any = {
-        material_id: selectedMaterial.id,
+      const gradePayload = {
         color_grade: formData.color_grade,
         consistency_grade: formData.consistency_grade,
         contamination_flag: formData.contamination_flag,
         result: finalResult,
         notes: formData.notes,
-        checked_at: new Date().toISOString(),
       };
-      if (profile) payload.checked_by = authUser.id;
-
-      // Insert QC check
-      const { error: qcErr } = await sb.from('qc_checks').insert(payload);
-      if (qcErr) throw qcErr;
+      if (qcSubject === 'finished_lot') {
+        await supabaseQcApi.submitFinishedProduct({ lot_id: selectedMaterial.id, ...gradePayload });
+      } else {
+        await supabaseQcApi.submitRawMaterial({ material_id: selectedMaterial.id, ...gradePayload });
+      }
       
-      // Update material qc_status
-      const { error: updateErr } = await sb.from('incoming_materials').update({ qc_status: finalResult === 'pass' ? 'approved' : 'rejected' }).eq('id', selectedMaterial.id);
-      if (updateErr) throw updateErr;
-      
-      toast.success(finalResult === 'pass' ? 'Material disetujui' : 'Material ditolak');
+      toast.success(finalResult === 'pass' ? 'QC disetujui' : 'QC ditolak');
       setShowQCForm(false);
       setConfirmReject(false);
       fetchData();
@@ -121,8 +134,18 @@ export default function QCDashboard() {
   }, [cameraServiceUrl]);
 
   const openQCForm = (material: any) => {
+    setQcSubject('material');
     setSelectedMaterial(material);
     setFormData({ 
+      color_grade: 3, consistency_grade: 3, contamination_flag: false, notes: '', result: '',
+    });
+    setShowQCForm(true);
+  };
+
+  const openFinishedQCForm = (lot: any) => {
+    setQcSubject('finished_lot');
+    setSelectedMaterial(lot);
+    setFormData({
       color_grade: 3, consistency_grade: 3, contamination_flag: false, notes: '', result: '',
     });
     setShowQCForm(true);
@@ -154,7 +177,7 @@ export default function QCDashboard() {
       await cameraRequest(endpoint);
       setStreamKey(Date.now());
       toast.success(cameraMode === 'video' ? 'Video demo mulai diproses' : 'Webcam live aktif');
-    } catch (e) {
+    } catch {
       // Error is already shown by cameraRequest
     }
   };
@@ -162,14 +185,14 @@ export default function QCDashboard() {
   const stopCamera = async () => {
     try {
       await cameraRequest('/receiving/stop');
-    } catch (e) {}
+    } catch {}
   };
 
   const resetCamera = async () => {
     try {
       await cameraRequest('/receiving/reset');
       setStreamKey(Date.now());
-    } catch (e) {}
+    } catch {}
   };
 
   const confirmCameraIntake = async () => {
@@ -186,34 +209,18 @@ export default function QCDashboard() {
       return;
     }
     setCameraBusy(true);
-    const sb = createClient();
     try {
       if (!authUser) throw new Error('Sesi login habis. Silakan login ulang.');
       const notes = `AI Camera Receiving | session=${cameraStatus.session_id} | mode=${cameraStatus.mode} | count=${cameraStatus.count}`;
-      const { data: profile } = await sb.from('users').select('id').eq('id', authUser.id).single();
-      const payload: any = {
+      await supabaseMaterialsApi.receive({
         supplier_id: intakeForm.supplier_id || null,
         material_name: intakeForm.material_name.trim(),
         quantity: cameraStatus.count,
         unit: intakeForm.unit,
         received_date: new Date().toISOString(),
-        qc_status: 'pending',
         notes,
-      };
-      if (profile) payload.received_by = authUser.id;
-
-      const { data: material, error } = await sb.from('incoming_materials').insert(payload).select().single();
-      if (error) throw error;
-      const auditPayload: any = {
         action: 'CAMERA_RECEIVING',
-        table_name: 'incoming_materials',
-        record_id: material.id,
-        new_value: { session_id: cameraStatus.session_id, mode: cameraStatus.mode, count: cameraStatus.count },
-      };
-      if (profile) auditPayload.user_id = authUser.id;
-
-      const { error: auditErr } = await sb.from('audit_logs').insert(auditPayload);
-      if (auditErr) console.warn('Gagal menyimpan audit_logs:', auditErr);
+      });
       
       toast.success(`${cameraStatus.count} ${intakeForm.unit} masuk ke antrian QC`);
     } catch (err: any) {
@@ -227,28 +234,12 @@ export default function QCDashboard() {
     // Reset camera and refresh data independently of the insert try/catch
     try {
       await cameraRequest('/receiving/reset');
-    } catch (e) {}
+    } catch {}
     await fetchData();
   };
 
   const passRate = todayChecks.length > 0
     ? Math.round((todayChecks.filter(c => c.result === 'pass').length / todayChecks.length) * 100) : 0;
-
-  const GradeSlider = ({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) => (
-    <div>
-      <div className="flex justify-between mb-1.5">
-        <label className="text-sm text-slate-300">{label}</label>
-        <span className={`text-sm font-bold ${value >= 4 ? 'text-green-400' : value === 3 ? 'text-yellow-400' : 'text-red-400'}`}>
-          {value}/5
-        </span>
-      </div>
-      <input type="range" min={1} max={5} value={value} onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-orange-500" />
-      <div className="flex justify-between text-xs text-slate-600 mt-1">
-        <span>Buruk</span><span>Sangat Baik</span>
-      </div>
-    </div>
-  );
 
   return (
     <DashboardLayout allowedRoles={['qc', 'admin']} onRefresh={fetchData}>
@@ -284,8 +275,8 @@ export default function QCDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard title="Menunggu QC" value={pendingMaterials.length}
-            subtitle="Material belum diperiksa" icon={Clock} color="orange" loading={loading} />
+          <StatCard title="Menunggu QC" value={pendingMaterials.length + pendingFinishedLots.length}
+            subtitle={`${pendingMaterials.length} material, ${pendingFinishedLots.length} produk jadi`} icon={Clock} color="orange" loading={loading} />
           <StatCard title="Selesai Hari Ini" value={todayChecks.length}
             subtitle="Total pemeriksaan" icon={FlaskConical} color="blue" loading={loading} />
           <StatCard title="Pass Rate Hari Ini" value={`${passRate}%`}
@@ -492,6 +483,30 @@ export default function QCDashboard() {
               ))}
             </div>
           </div>
+
+          {/* Finished Product Release Queue */}
+          <div className="glass-card p-5">
+            <h2 className="text-base font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-yellow-400" />
+              QC Extract / Powder ({pendingFinishedLots.length})
+            </h2>
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+              {pendingFinishedLots.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">Tidak ada lot menunggu release</div>
+              ) : pendingFinishedLots.map(lot => (
+                <div key={lot.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 gap-3">
+                  <div className="min-w-0">
+                    <div className="text-slate-800 dark:text-white text-sm font-mono font-medium">{lot.lot_number}</div>
+                    <div className="text-slate-500 text-xs">{lot.incoming_materials?.material_name}</div>
+                  </div>
+                  <button onClick={() => openFinishedQCForm(lot)}
+                    className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium transition-colors">
+                    Release QC
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -509,7 +524,7 @@ export default function QCDashboard() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">Form QC Pemeriksaan</h3>
-                <p className="text-slate-400 text-sm">{selectedMaterial.material_name}</p>
+                <p className="text-slate-400 text-sm">{selectedMaterial.material_name || `${selectedMaterial.lot_number} - ${selectedMaterial.incoming_materials?.material_name}`}</p>
               </div>
             </div>
 
@@ -553,9 +568,11 @@ export default function QCDashboard() {
 
       <ConfirmModal
         isOpen={confirmReject}
-        title="Tolak Material"
-        message={`Yakin menolak material ${selectedMaterial?.material_name}? Material tidak akan tersedia untuk PPIC.`}
-        confirmText="Tolak Material"
+        title={qcSubject === 'finished_lot' ? 'Tolak Produk Jadi' : 'Tolak Material'}
+        message={qcSubject === 'finished_lot'
+          ? `Yakin menolak lot ${selectedMaterial?.lot_number}? Lot tidak dapat masuk gudang finished goods.`
+          : `Yakin menolak material ${selectedMaterial?.material_name}? Material tidak akan tersedia untuk PPIC.`}
+        confirmText="Tolak QC"
         variant="danger"
         onConfirm={() => submitQCDirect('fail')}
         onCancel={() => setConfirmReject(false)}

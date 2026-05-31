@@ -6,6 +6,7 @@ const {
   buildOperationsPipeline,
   getSevenDayProductionQcChart,
   getLotStatusAfterWarehouseRelease,
+  getDispatchEffects,
 } = require('./workflowDomain.js');
 
 test('buildOperationsPipeline counts end-to-end operational stages', () => {
@@ -29,10 +30,23 @@ test('buildOperationsPipeline counts end-to-end operational stages', () => {
     { id: 'awaiting_schedule', label: 'Approved, Belum Dijadwalkan', count: 1, tone: 'green' },
     { id: 'queued', label: 'Antri Produksi', count: 1, tone: 'slate' },
     { id: 'in_production', label: 'Sedang Produksi', count: 1, tone: 'blue' },
+    { id: 'awaiting_finished_qc', label: 'Menunggu QC Produk Jadi', count: 0, tone: 'yellow' },
     { id: 'completed_unstored', label: 'Selesai, Belum Masuk Gudang', count: 0, tone: 'orange' },
     { id: 'stored', label: 'Tersimpan di Gudang', count: 1, tone: 'purple' },
     { id: 'dispatching', label: 'Proses Pengiriman', count: 1, tone: 'cyan' },
   ]);
+});
+
+test('buildOperationsPipeline exposes finished-product QC as its own release gate', () => {
+  const lots = [
+    { id: 'l1', material_id: 'm1', status: 'awaiting_finished_qc' },
+    { id: 'l2', material_id: 'm2', status: 'completed' },
+  ];
+
+  const pipeline = buildOperationsPipeline({ lots });
+
+  assert.equal(pipeline.find(stage => stage.id === 'awaiting_finished_qc').count, 1);
+  assert.equal(pipeline.find(stage => stage.id === 'completed_unstored').count, 1);
 });
 
 test('getSevenDayProductionQcChart derives rolling daily counts from real records', () => {
@@ -60,4 +74,23 @@ test('getSevenDayProductionQcChart derives rolling daily counts from real record
 test('warehouse release keeps lot completed instead of marking it dispatched', () => {
   assert.equal(getLotStatusAfterWarehouseRelease('completed'), 'completed');
   assert.equal(getLotStatusAfterWarehouseRelease('in_production'), 'in_production');
+});
+
+test('sample dispatch does not release a lot while shipped bulk dispatch does', () => {
+  assert.deepEqual(getDispatchEffects('sample', 'prepared'), {
+    releaseSlot: false,
+    lotStatus: null,
+  });
+  assert.deepEqual(getDispatchEffects('sample', 'shipped'), {
+    releaseSlot: false,
+    lotStatus: null,
+  });
+  assert.deepEqual(getDispatchEffects('bulk', 'prepared'), {
+    releaseSlot: false,
+    lotStatus: null,
+  });
+  assert.deepEqual(getDispatchEffects('bulk', 'shipped'), {
+    releaseSlot: true,
+    lotStatus: 'dispatched',
+  });
 });

@@ -13,10 +13,7 @@ async function establishSupabaseSession(supabase, session) {
     refresh_token: session.refresh_token,
   });
   if (error) {
-    // Supabase client mungkin dikonfigurasi ke project berbeda dari backend.
-    // App menggunakan backend token via axios, bukan Supabase client langsung,
-    // jadi session sync gagal tidak memblokir login.
-    console.warn('Supabase setSession warning (non-fatal):', error.message);
+    throw new Error(`Sesi Supabase tidak dapat disinkronkan: ${error.message}`);
   }
 }
 

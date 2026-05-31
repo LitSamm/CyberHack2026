@@ -109,20 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single();
 
     if (profileError || !profile) {
-      // Profile not in users table yet — create minimal one from auth data
-      const minimalUser: User = {
-        id: data.user.id,
-        name: data.user.email?.split('@')[0] || 'User',
-        email: data.user.email || email,
-        role: 'admin', // default until profile set
-        is_active: true,
-      };
-      localStorage.setItem('aromos_token', accessToken);
-      localStorage.setItem('aromos_user', JSON.stringify(minimalUser));
-      setToken(accessToken);
-      setUser(minimalUser);
-      router.push(getRoleDashboard(minimalUser.role));
-      return;
+      await supabase.auth.signOut();
+      throw new Error('Profil operasional tidak ditemukan. Hubungi administrator.');
     }
 
     if (!profile.is_active) {

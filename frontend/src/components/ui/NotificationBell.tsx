@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { BellIcon, TimeIcon, CheckCircleIcon, InfoIcon, AlertIcon } from '@/icons';
 import { useRouter } from 'next/navigation';
@@ -21,7 +21,7 @@ export default function NotificationBell() {
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
       const data = await supabaseNotificationsApi.getAll();
@@ -29,7 +29,7 @@ export default function NotificationBell() {
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
@@ -70,7 +70,7 @@ export default function NotificationBell() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   // Click outside listener
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function NotificationBell() {
     try {
       await supabaseNotificationsApi.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    } catch (err) {
+    } catch {
       toast.error('Gagal menandai dibaca');
     }
   };
@@ -100,7 +100,7 @@ export default function NotificationBell() {
       try {
         await supabaseNotificationsApi.markAsRead(notif.id);
         setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
-      } catch (err) {}
+      } catch {}
     }
     setIsOpen(false);
 

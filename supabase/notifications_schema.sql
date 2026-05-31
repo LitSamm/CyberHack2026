@@ -23,8 +23,7 @@ CREATE POLICY "Users can update their own notifications"
 ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own notifications" 
 ON public.notifications FOR DELETE USING (auth.uid() = user_id);
-CREATE POLICY "Service role full access on notifications" 
-ON public.notifications FOR ALL USING (true);
+-- Service-role requests bypass RLS. Do not add a public write policy here.
 
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
@@ -34,7 +33,7 @@ CREATE OR REPLACE FUNCTION notify_dispatch_ready() RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
     INSERT INTO public.notifications (user_id, type, title, message, lot_id)
-    SELECT id, 'dispatch_ready', 'Lot Siap Dikirim', 'Lot ' || NEW.lot_number || ' telah selesai produksi dan siap dikirim.', NEW.id
+    SELECT id, 'dispatch_ready', 'Lot Lolos QC Produk Jadi', 'Lot ' || NEW.lot_number || ' telah lolos QC produk jadi dan siap ditempatkan di gudang atau diproses untuk dispatch.', NEW.id
     FROM public.users WHERE role = 'warehouse';
   END IF;
   RETURN NEW;
@@ -82,15 +81,13 @@ BEGIN
   IF NEW.is_occupied = true AND NEW.current_lot_id IS NOT NULL AND 
      (OLD.is_occupied = false OR OLD.current_lot_id IS DISTINCT FROM NEW.current_lot_id) THEN
     
-    -- Figure out required temp by material name (mock logic matching frontend)
-    SELECT im.material_name, l.lot_number INTO v_material_name, v_lot_num
+    -- Read the configured storage specification. Unconfigured materials default to ambient.
+    SELECT im.material_name, l.lot_number, COALESCE(spec.required_temperature_zone, 'normal')
+    INTO v_material_name, v_lot_num, v_req_temp
     FROM public.lots l
     JOIN public.incoming_materials im ON l.material_id = im.id
+    LEFT JOIN public.material_storage_specs spec ON lower(spec.material_name) = lower(im.material_name)
     WHERE l.id = NEW.current_lot_id;
-
-    v_req_temp := 'normal';
-    IF v_material_name ILIKE '%ekstrak%' OR v_material_name ILIKE '%liquid%' THEN v_req_temp := 'cold_minus4'; END IF;
-    IF v_material_name ILIKE '%frozen%' OR v_material_name ILIKE '%beku%' OR v_material_name ILIKE '%kultur%' THEN v_req_temp := 'cold_minus20'; END IF;
 
     IF v_req_temp != NEW.temperature_zone THEN
       INSERT INTO public.notifications (user_id, type, title, message, lot_id)

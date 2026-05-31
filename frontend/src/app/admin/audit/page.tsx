@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { DownloadIcon, ListIcon, GridIcon } from '@/icons';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import StatusBadge from '@/components/ui/StatusBadge';
 import { auditApi, usersApi } from '@/lib/api';
 import { formatDateTime, getRoleLabel } from '@/lib/utils';
 
@@ -27,7 +25,7 @@ export default function AuditPage() {
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const params = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v));
+      const params = Object.fromEntries(Object.entries(filters).filter(([, value]) => value));
       const { data } = await auditApi.getAll(params);
       setLogs(data.data);
       setTotal(data.total);

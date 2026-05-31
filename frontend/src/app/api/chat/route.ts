@@ -9,6 +9,12 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) {
+      return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { message } = body;
 
@@ -26,6 +32,10 @@ export async function POST(req: Request) {
 
     // 1. Gather Operational Snapshot Data from Supabase
     const sb = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const { data: { user }, error: authError } = await sb.auth.getUser(token);
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Sesi tidak valid atau sudah berakhir' }, { status: 401 });
+    }
     
     const today = new Date().toISOString().split('T')[0];
     const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

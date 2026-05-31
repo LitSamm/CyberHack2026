@@ -2,19 +2,9 @@
 import { ThemeToggleButton } from "@/components/dashboard/common/ThemeToggleButton";
 import UserDropdown from "@/components/dashboard/header/UserDropdown";
 import { useSidebar } from "@/context/SidebarContext";
-import Image from "next/image";
-import Link from "next/link";
-import React, { useState, useEffect, useRef } from "react";
-import { searchApi } from '@/lib/api';
+import React, { useState } from "react";
 import NotificationBell from '@/components/ui/NotificationBell';
-import { CloseIcon, TimeIcon } from "@/icons";
-
-interface SearchResult {
-  lots: any[];
-  materials: any[];
-  dispatches: any[];
-  total: number;
-}
+import { TimeIcon } from "@/icons";
 
 const AppHeader: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
