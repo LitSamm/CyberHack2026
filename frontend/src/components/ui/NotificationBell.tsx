@@ -168,7 +168,7 @@ export default function NotificationBell() {
                     {!notif.is_read && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
                     )}
-                    <div className={cn("p-2 rounded-lg bg-gray-100 dark:bg-gray-800", !notif.is_read ? "bg-slate-700" : "")}>
+                    <div className={cn("p-2 rounded-lg", !notif.is_read ? "bg-gray-200 dark:bg-slate-700" : "bg-gray-100 dark:bg-gray-800")}>
                       {getIcon(notif.type)}
                     </div>
                     <div className="flex-1 min-w-0">

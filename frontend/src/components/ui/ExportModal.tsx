@@ -153,7 +153,7 @@ export default function ExportModal({ isOpen, onClose, reportType, title }: Expo
           <button
             onClick={handleExport}
             disabled={loading}
-            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 text-sm font-medium rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <TimeIcon /> : <DownloadIcon />}
             Download

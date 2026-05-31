@@ -170,7 +170,7 @@ export default function WarehouseDashboard() {
       if (slot.temperature_zone === 'cold_minus20') return 'bg-blue-800/60 border-blue-400 hover:bg-blue-800/70 shadow-[0_0_15px_rgba(3,105,161,0.5)]';
     }
     
-    return 'bg-slate-700/60 border-slate-600 hover:bg-gray-100 dark:hover:bg-gray-800';
+    return 'bg-gray-200/60 dark:bg-slate-700/60 border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-gray-800';
   };
 
   // Group slots by row (A-J)
@@ -199,7 +199,7 @@ export default function WarehouseDashboard() {
           </div>
           <button 
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
           >
             <Download className="w-4 h-4 text-orange-500" />
             Export Inventory
@@ -214,7 +214,7 @@ export default function WarehouseDashboard() {
               <div className="text-red-500 font-bold">
                 ⚠️ CRITICAL: {mismatches.length} Lot Berada di Zona Suhu yang Salah!
               </div>
-              <div className="text-red-400/80 text-sm mt-1">
+              <div className="text-red-600/90 dark:text-red-400/80 text-sm mt-1">
                 Segera pindahkan lot berikut ke zona yang sesuai:
                 <ul className="list-disc list-inside mt-1">
                   {mismatches.map(m => (
@@ -254,11 +254,11 @@ export default function WarehouseDashboard() {
                   <div className="text-xs text-gray-500 dark:text-gray-400">Total Slot</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-400">{stats?.occupied || 0}</div>
+                  <div className="text-2xl font-bold text-orange-500 dark:text-orange-400">{stats?.occupied || 0}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Terisi</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">{stats?.available || 0}</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.available || 0}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">Tersedia</div>
                 </div>
               </div>
@@ -424,7 +424,7 @@ export default function WarehouseDashboard() {
                     </div>
                     <div>
                       <div className="text-gray-400 dark:text-gray-500 mb-0.5">QC Status</div>
-                      <div className="text-green-400 flex items-center gap-1"> Approved</div>
+                      <div className="text-green-600 dark:text-green-400 flex items-center gap-1"> Approved</div>
                     </div>
                   </div>
                 </div>
@@ -448,7 +448,7 @@ export default function WarehouseDashboard() {
                 {mismatches.find(m => m.id === selectedSlot.id) && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
                     <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-red-400">
+                    <div className="text-sm text-red-600 dark:text-red-400">
                       <strong>Mismatch Suhu!</strong> Material ini memerlukan {TEMP_ZONE_CONFIG[getStorageSpec(selectedSlot.lots?.incoming_materials?.material_name).required_temperature_zone]?.label}.
                     </div>
                   </div>
@@ -491,7 +491,7 @@ export default function WarehouseDashboard() {
                 {showTempWarning && (
                   <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-start gap-2 animate-in slide-in-from-top-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-yellow-400">
+                    <div className="text-sm text-yellow-700 dark:text-yellow-400">
                       <strong>Peringatan Suhu:</strong> Lot ini idealnya disimpan di <strong>{TEMP_ZONE_CONFIG[selectedLotTempReq]?.label}</strong>. Slot ini adalah {TEMP_ZONE_CONFIG[selectedSlot.temperature_zone]?.label}.
                     </div>
                   </div>
@@ -500,7 +500,7 @@ export default function WarehouseDashboard() {
                 <button 
                   onClick={handleAssignLot} 
                   disabled={!assignLotId || saving}
-                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Konfirmasi Penempatan
                   <ArrowRight className="w-4 h-4" />

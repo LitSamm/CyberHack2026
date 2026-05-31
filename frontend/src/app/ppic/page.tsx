@@ -139,14 +139,14 @@ export default function PPICDashboard() {
           <div className="flex gap-2">
             <button 
               onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
             >
               <Download className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               Export Jadwal
             </button>
             <button onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
-              <Plus className="w-4 h-4 text-gray-800 dark:text-white/90" />
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+              <Plus className="w-4 h-4" />
               Buat Jadwal
             </button>
           </div>
@@ -163,7 +163,7 @@ export default function PPICDashboard() {
                 className={cn('rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 min-h-64 border-t-2', col.color)}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm">{col.label}</h3>
-                  <span className="text-xs bg-slate-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full">
                     {colSchedules.length}
                   </span>
                 </div>
@@ -318,7 +318,7 @@ export default function PPICDashboard() {
                 <button type="button" onClick={() => setShowForm(false)}
                   className="flex-1 py-2.5 border border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm transition-colors">Batal</button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Membuat...' : 'Buat Jadwal'}
                 </button>
               </div>

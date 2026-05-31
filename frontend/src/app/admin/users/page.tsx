@@ -127,7 +127,7 @@ export default function UsersPage() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{users.length} total pengguna terdaftar</p>
           </div>
           <button onClick={() => { setEditUser(null); setFormData({ name: '', email: '', password: '', role: 'qc' }); setShowForm(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
             <UserPlus size={16} />
             Tambah User
           </button>
@@ -262,7 +262,7 @@ export default function UsersPage() {
                   Batal
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>

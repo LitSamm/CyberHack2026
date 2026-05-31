@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { auditApi, usersApi } from '@/lib/api';
 import { AnimatedRow } from '@/components/ui/AnimatedList';
+import DateRangePicker from '@/components/ui/DateRangePicker';
 import { formatDateTime, getRoleLabel } from '@/lib/utils';
 
 import toast from 'react-hot-toast';
@@ -67,7 +68,7 @@ export default function AuditPage() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{total} total entri log</p>
           </div>
           <button onClick={handleExport} disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
             
             {exporting ? 'Mengunduh...' : 'Export CSV'}
           </button>
@@ -79,28 +80,30 @@ export default function AuditPage() {
             
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="flex flex-wrap gap-3">
             <select value={filters.user_id} onChange={e => setFilters(p => ({ ...p, user_id: e.target.value }))}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 col-span-1 focus:border-orange-500">
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500 w-36">
               <option value="">Semua User</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
             <select value={filters.action} onChange={e => setFilters(p => ({ ...p, action: e.target.value }))}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500">
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500 w-32">
               <option value="">Semua Aksi</option>
               <option value="INSERT">INSERT</option>
               <option value="UPDATE">UPDATE</option>
               <option value="DELETE">DELETE</option>
             </select>
             <select value={filters.table_name} onChange={e => setFilters(p => ({ ...p, table_name: e.target.value }))}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500">
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500 w-36">
               <option value="">Semua Tabel</option>
               {Object.entries(TABLE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
-            <input type="date" value={filters.from} onChange={e => setFilters(p => ({ ...p, from: e.target.value }))}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500" />
-            <input type="date" value={filters.to} onChange={e => setFilters(p => ({ ...p, to: e.target.value }))}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 rounded-lg text-sm text-gray-800 dark:text-white/90 focus:border-orange-500" />
+            <DateRangePicker
+              value={{ from: filters.from, to: filters.to }}
+              onChange={({ from, to }) => setFilters(p => ({ ...p, from, to }))}
+              placeholder="Rentang tanggal"
+              className="flex-1 min-w-52"
+            />
           </div>
         </div>
 

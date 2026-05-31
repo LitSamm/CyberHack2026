@@ -100,8 +100,8 @@ export default function DispatchPage() {
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola pengiriman produk ke customer</p>
           </div>
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4 text-gray-800 dark:text-white/90" />
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" />
             Buat Pengiriman
           </button>
         </div>
@@ -110,9 +110,9 @@ export default function DispatchPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Total', value: stats.total, color: 'text-gray-800 dark:text-white/90' },
-            { label: 'Siap Kirim', value: stats.prepared, color: 'text-orange-400' },
-            { label: 'Dalam Perjalanan', value: stats.shipped, color: 'text-blue-400' },
-            { label: 'Terkirim', value: stats.delivered, color: 'text-green-400' },
+            { label: 'Siap Kirim', value: stats.prepared, color: 'text-orange-500 dark:text-orange-400' },
+            { label: 'Dalam Perjalanan', value: stats.shipped, color: 'text-blue-600 dark:text-blue-400' },
+            { label: 'Terkirim', value: stats.delivered, color: 'text-green-600 dark:text-green-400' },
           ].map(s => (
             <div key={s.label} className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 text-center">
               <div className={cn('text-2xl font-bold mb-1', s.color)}>{s.value}</div>
@@ -128,7 +128,7 @@ export default function DispatchPage() {
               <button key={s} onClick={() => setFilterStatus(s)}
                 className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                   filterStatus === s
-                    ? 'bg-orange-500 text-gray-800 dark:text-white/90'
+                    ? 'bg-orange-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90 hover:bg-gray-100 dark:hover:bg-gray-800'
                 )}>
                 {s === '' ? 'Semua' : STATUS_LABELS[s]}
@@ -161,7 +161,7 @@ export default function DispatchPage() {
                   <td className="py-3 px-4">
                     <span className="font-mono text-orange-400 text-xs font-semibold">{d.lots?.lot_number}</span>
                   </td>
-                  <td className="py-3 px-4 text-xs uppercase text-blue-400 font-semibold">{d.movement_type || 'bulk'}</td>
+                  <td className="py-3 px-4 text-xs uppercase text-blue-600 dark:text-blue-400 font-semibold">{d.movement_type || 'bulk'}</td>
                   <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">{d.quantity || '-'} {d.unit || ''}</td>
                   <td className="py-3 px-4 text-gray-800 dark:text-white/90 font-medium text-sm">{d.customer_name}</td>
                   <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">{d.destination}</td>
@@ -261,7 +261,7 @@ export default function DispatchPage() {
                 <button type="button" onClick={() => setShowForm(false)}
                   className="flex-1 py-2.5 border border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-sm transition-colors">Batal</button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Memproses...' : 'Buat Pengiriman'}
                 </button>
               </div>

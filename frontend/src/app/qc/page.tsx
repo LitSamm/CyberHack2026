@@ -19,7 +19,7 @@ function GradeSlider({ label, value, onChange }: { label: string; value: number;
     <div>
       <div className="flex justify-between mb-1.5">
         <label className="text-sm text-gray-700 dark:text-slate-300">{label}</label>
-        <span className={`text-sm font-bold ${value >= 4 ? 'text-green-400' : value === 3 ? 'text-yellow-400' : 'text-red-400'}`}>
+        <span className={`text-sm font-bold ${value >= 4 ? 'text-green-600 dark:text-green-400' : value === 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
           {value}/5
         </span>
       </div>
@@ -312,11 +312,11 @@ export default function QCDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">QC Dashboard</h1>
-            <p className="text-slate-400 text-sm mt-1">Pemeriksaan kualitas material masuk sebelum PPIC membuat lot</p>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Pemeriksaan kualitas material masuk sebelum PPIC membuat lot</p>
           </div>
           <button 
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors"
           >
             <Download className="w-4 h-4 text-orange-500" />
             Export Laporan QC
@@ -326,12 +326,12 @@ export default function QCDashboard() {
         {/* Overdue Alert Banner */}
         {overdueAlerts.length > 0 && (
           <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
-            <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="text-yellow-400 font-semibold text-sm">
+              <div className="text-yellow-700 dark:text-yellow-400 font-semibold text-sm">
                 ⚠️ {overdueAlerts.length} Material Menunggu QC {'>'} 24 Jam!
               </div>
-              <div className="text-yellow-300/70 text-xs mt-1">
+              <div className="text-yellow-600/80 dark:text-yellow-300/70 text-xs mt-1">
                 {overdueAlerts.map(m => m.material_name).join(', ')}
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function QCDashboard() {
 
         {/* Camera Receiving Station */}
         <section className="glass-card overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-slate-700/70 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 border-b border-gray-200 dark:border-slate-700/70 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-white">
                 <Camera className="h-5 w-5 text-orange-400" />
@@ -369,7 +369,7 @@ export default function QCDashboard() {
                   onClick={() => setCameraMode(option.value as 'video' | 'webcam')}
                   disabled={cameraStatus.state === 'running'}
                   className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    cameraMode === option.value ? 'bg-orange-500 text-white' : 'text-slate-400 hover:text-white'
+                    cameraMode === option.value ? 'bg-orange-500 text-white' : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   {option.label}
@@ -389,15 +389,15 @@ export default function QCDashboard() {
                 />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-center">
-                  <Camera className="mb-3 h-12 w-12 text-slate-700" />
-                  <div className="text-sm font-medium text-slate-400">Camera station siap digunakan</div>
-                  <div className="mt-1 text-xs text-slate-600">Pilih source dan mulai receiving session.</div>
+                  <Camera className="mb-3 h-12 w-12 text-gray-400 dark:text-slate-700" />
+                  <div className="text-sm font-medium text-gray-500 dark:text-slate-400">Camera station siap digunakan</div>
+                  <div className="mt-1 text-xs text-gray-400 dark:text-slate-600">Pilih source dan mulai receiving session.</div>
                 </div>
               )}
               <div className="absolute left-3 top-3 flex items-center gap-2 rounded-md border border-slate-300 bg-white/80 dark:border-slate-700 dark:bg-slate-950/80 px-2.5 py-1.5 backdrop-blur-sm">
                 <span className={`h-2 w-2 rounded-full ${
                   cameraStatus.state === 'running' ? 'animate-pulse bg-red-500' :
-                  cameraStatus.state === 'error' ? 'bg-red-500' : 'bg-slate-500'
+                  cameraStatus.state === 'error' ? 'bg-red-500' : 'bg-gray-400 dark:bg-slate-500'
                 }`} />
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 dark:text-slate-200">{cameraStatus.state}</span>
               </div>
@@ -409,7 +409,7 @@ export default function QCDashboard() {
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-400">Supplier</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Supplier</label>
                 <select
                   value={intakeForm.supplier_id}
                   onChange={e => setIntakeForm(p => ({ ...p, supplier_id: e.target.value }))}
@@ -421,7 +421,7 @@ export default function QCDashboard() {
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-400">Nama Material</label>
+                <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Nama Material</label>
                 <input
                   value={intakeForm.material_name}
                   onChange={e => setIntakeForm(p => ({ ...p, material_name: e.target.value }))}
@@ -431,7 +431,7 @@ export default function QCDashboard() {
               </div>
               {cameraMode === 'webcam' && (
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-400">Pilih Kamera</label>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Pilih Kamera</label>
                   <select
                     value={selectedCamera}
                     onChange={e => setSelectedCamera(Number(e.target.value))}
@@ -586,7 +586,7 @@ export default function QCDashboard() {
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQCForm(false)} />
           <div className="relative glass-card w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+            <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
               <X className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-3 mb-5">
@@ -595,7 +595,7 @@ export default function QCDashboard() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Form QC Pemeriksaan</h3>
-                <p className="text-slate-400 text-sm">{selectedMaterial.material_name || `${selectedMaterial.lot_number} - ${selectedMaterial.incoming_materials?.material_name}`}</p>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">{selectedMaterial.material_name || `${selectedMaterial.lot_number} - ${selectedMaterial.incoming_materials?.material_name}`}</p>
               </div>
             </div>
 
@@ -604,11 +604,11 @@ export default function QCDashboard() {
                 <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
                         <ScanLine className="h-4 w-4" />
                         AI-assisted Optical Screening
                       </div>
-                      <p className="mt-1 text-xs text-slate-400">Screening visual OpenCV. Operator tetap menetapkan keputusan QC akhir.</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Screening visual OpenCV. Operator tetap menetapkan keputusan QC akhir.</p>
                     </div>
                     {powderResult && (
                       <span className={`rounded px-2 py-1 text-xs font-semibold uppercase ${powderResult.recommendation === 'approve' ? 'bg-green-500/15 text-green-300' : 'bg-yellow-500/15 text-yellow-300'}`}>
@@ -618,18 +618,18 @@ export default function QCDashboard() {
                   </div>
 
                   <div className="grid gap-2 sm:grid-cols-3">
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800 px-3 py-2 text-xs text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700">
                       <Upload className="h-4 w-4" />
                       Upload Foto
                       <input type="file" accept="image/*" className="hidden" disabled={powderBusy}
                         onChange={event => analyzePowderFile(event.target.files?.[0])} />
                     </label>
                     <button onClick={analyzePowderWebcam} disabled={powderBusy}
-                      className="flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-50">
+                      className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800 px-3 py-2 text-xs text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50">
                       <Camera className="h-4 w-4" />
                       Snapshot Webcam
                     </button>
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-xs text-slate-200 hover:bg-slate-700">
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800 px-3 py-2 text-xs text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-700">
                       <FileSpreadsheet className="h-4 w-4" />
                       CSV HOSI
                       <input type="file" accept=".csv,text/csv" className="hidden" disabled={powderBusy}
@@ -637,21 +637,21 @@ export default function QCDashboard() {
                     </label>
                   </div>
 
-                  {powderBusy && <div className="mt-3 text-xs text-cyan-300">Menganalisis sampel...</div>}
+                  {powderBusy && <div className="mt-3 text-xs text-cyan-600 dark:text-cyan-300">Menganalisis sampel...</div>}
                   {powderResult && (
                     <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
-                      <img src={powderResult.annotated_image} alt="Preview screening powder" className="h-28 w-full rounded border border-slate-700 object-cover" />
+                      <img src={powderResult.annotated_image} alt="Preview screening powder" className="h-28 w-full rounded border border-gray-200 dark:border-slate-700 object-cover" />
                       <div className="space-y-1 text-xs text-gray-600 dark:text-slate-300">
                         <div>Confidence: <strong>{Math.round(powderResult.confidence * 100)}%</strong></div>
                         <div>Anomali visual: <strong>{(powderResult.anomaly_ratio * 100).toFixed(2)}%</strong></div>
-                        <p className="leading-relaxed text-slate-400">{powderResult.explanation}</p>
+                        <p className="leading-relaxed text-gray-500 dark:text-slate-400">{powderResult.explanation}</p>
                       </div>
                     </div>
                   )}
                   {hosiSummary && (
-                    <div className="mt-3 rounded border border-slate-700 bg-slate-900/60 p-3 text-xs text-slate-300">
+                    <div className="mt-3 rounded border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/60 p-3 text-xs text-gray-600 dark:text-slate-300">
                       HOSI CSV tervalidasi: {hosiSummary.sample_count} titik, {hosiSummary.wavelength_min_nm}–{hosiSummary.wavelength_max_nm} nm.
-                      <div className="mt-1 text-slate-500">{hosiSummary.explanation}</div>
+                      <div className="mt-1 text-gray-400 dark:text-slate-500">{hosiSummary.explanation}</div>
                     </div>
                   )}
                 </div>
@@ -662,10 +662,10 @@ export default function QCDashboard() {
               <GradeSlider label="Grade Konsistensi" value={formData.consistency_grade}
                 onChange={v => setFormData(p => ({ ...p, consistency_grade: v }))} />
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800/60 rounded-lg border border-gray-200 dark:border-slate-700">
                 <label className="text-sm text-gray-700 dark:text-slate-300">Kontaminasi Terdeteksi</label>
                 <button onClick={() => setFormData(p => ({ ...p, contamination_flag: !p.contamination_flag }))}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${formData.contamination_flag ? 'bg-red-500' : 'bg-slate-600'}`}>
+                  className={`relative w-11 h-6 rounded-full transition-colors ${formData.contamination_flag ? 'bg-red-500' : 'bg-gray-300 dark:bg-slate-600'}`}>
                   <div className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform ${formData.contamination_flag ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
               </div>
@@ -674,7 +674,7 @@ export default function QCDashboard() {
                 <label className="block text-sm text-slate-300 mb-1.5">Catatan</label>
                 <textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
                   rows={3} placeholder="Catatan tambahan..."
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm resize-none focus:border-orange-500" />
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white text-sm resize-none focus:border-orange-500" />
               </div>
 
               <div className="flex gap-3 pt-2">

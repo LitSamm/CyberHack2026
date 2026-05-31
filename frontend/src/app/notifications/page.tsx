@@ -80,14 +80,14 @@ export default function NotificationsPage() {
               <Bell className="w-6 h-6 text-orange-500" />
               Semua Notifikasi
             </h1>
-            <p className="text-slate-400 mt-1">Kelola dan pantau semua peringatan sistem</p>
+            <p className="text-gray-500 dark:text-slate-400 mt-1">Kelola dan pantau semua peringatan sistem</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={markAllRead} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-gray-200 dark:border-slate-700">
+            <button onClick={markAllRead} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
               <CheckCircle2 className="w-4 h-4 text-orange-500" />
               Tandai Semua Dibaca
             </button>
-            <button onClick={() => setShowConfirm(true)} className="px-4 py-2 bg-gray-100 hover:bg-red-500/20 dark:bg-slate-800 dark:hover:bg-red-500/20 hover:text-red-500 dark:hover:text-red-400 hover:border-red-500/50 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-gray-200 dark:border-slate-700">
+            <button onClick={() => setShowConfirm(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-500/40 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white/90 rounded-lg text-sm font-medium transition-colors">
               <Trash2 className="w-4 h-4" />
               Hapus Semua
             </button>
@@ -109,8 +109,8 @@ export default function NotificationsPage() {
               className={cn(
                 "px-4 py-2 rounded-xl text-sm transition-colors whitespace-nowrap",
                 filter === f.id 
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" 
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700"
+                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                  : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700"
               )}
             >
               {f.label}
@@ -119,7 +119,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* List */}
-        <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden min-h-[400px]">
+        <div className="glass-card rounded-2xl border border-gray-200 dark:border-slate-800 overflow-hidden min-h-[400px]">
           {loading ? (
             <div className="p-8 flex justify-center">
               <div className="w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
@@ -130,14 +130,14 @@ export default function NotificationsPage() {
               <p>Tidak ada notifikasi yang ditemukan.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/50">
+            <div className="divide-y divide-gray-100 dark:divide-slate-800/50">
               {filteredNotifs.map((notif, i) => (
                 <AnimatedItem key={notif.id} index={i}>
-                <div className={cn("p-4 flex gap-4 transition-colors relative group hover:bg-slate-800/30", !notif.is_read ? "bg-slate-800/20" : "")}>
+                <div className={cn("p-4 flex gap-4 transition-colors relative group hover:bg-gray-50 dark:hover:bg-slate-800/30", !notif.is_read ? "bg-gray-50/80 dark:bg-slate-800/20" : "")}>
                   {!notif.is_read && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
                   )}
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1", !notif.is_read ? "bg-slate-700" : "bg-slate-800")}>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1", !notif.is_read ? "bg-gray-200 dark:bg-slate-700" : "bg-gray-100 dark:bg-slate-800")}>
                     {getIcon(notif.type)}
                   </div>
                   <div className="flex-1">
@@ -145,12 +145,12 @@ export default function NotificationsPage() {
                       <h4 className={cn("text-base text-gray-900 dark:text-white", !notif.is_read ? "font-semibold" : "font-medium")}>
                         {notif.title}
                       </h4>
-                      <span className="text-xs text-slate-500 bg-slate-900 px-2 py-1 rounded-md border border-slate-800">
+                      <span className="text-xs text-gray-500 dark:text-slate-500 bg-gray-100 dark:bg-slate-900 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-800">
                         {format(new Date(notif.created_at), 'dd MMM yyyy, HH:mm')}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-400 mt-1">{notif.message}</p>
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{notif.message}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
                       {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: localeId })}
                     </p>
                   </div>

@@ -110,7 +110,7 @@ export default function MaterialIntakePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Material Intake</h1>
-            <p className="text-slate-400 text-sm mt-1">Pintu masuk resmi material dari supplier sebelum QC dan PPIC</p>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Pintu masuk resmi material dari supplier sebelum QC dan PPIC</p>
           </div>
           <button
             onClick={() => setShowForm(true)}
@@ -192,7 +192,7 @@ export default function MaterialIntakePage() {
         <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative glass-card w-full max-w-md p-6">
-            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
               <X className="w-4 h-4" />
             </button>
             <div className="flex items-center gap-4 mb-6">
