@@ -16,6 +16,7 @@ import {
   BoxIcon,
   PlugInIcon
 } from "../icons/index";
+import { Bot } from 'lucide-react';
 
 interface OriginalNavItem {
   href: string;
@@ -33,6 +34,7 @@ const NAV_ITEMS: OriginalNavItem[] = [
   { href: '/ppic', icon: <CalenderIcon />, label: 'PPIC & Produksi', roles: ['ppic', 'admin'] },
   { href: '/warehouse', icon: <BoxCubeIcon />, label: 'Gudang', roles: ['warehouse', 'admin'] },
   { href: '/dispatch', icon: <PaperPlaneIcon />, label: 'Pengiriman', roles: ['warehouse', 'ppic', 'admin'] },
+  { href: '/ai-assistant', icon: <Bot className="w-5 h-5" />, label: 'AI Assistant', roles: ['warehouse', 'ppic', 'qc', 'admin'] },
 ];
 
 const AppSidebar: React.FC = () => {

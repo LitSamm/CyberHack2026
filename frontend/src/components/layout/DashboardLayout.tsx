@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import ChatAssistant from '@/components/ui/ChatAssistant';
 import AppSidebar from '@/layout/AppSidebar';
 import AppHeader from '@/layout/AppHeader';
 import Backdrop from '@/layout/Backdrop';
@@ -67,7 +66,6 @@ export default function DashboardLayout({ children, allowedRoles, onRefresh }: D
           {children}
         </main>
       </div>
-      <ChatAssistant />
     </div>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-import { ChatIcon, CloseIcon, PaperPlaneIcon, InfoIcon, UserIcon, TimeIcon, ArrowRightIcon } from '@/icons';
+import { Bot } from 'lucide-react';
+import { ChatIcon, CloseIcon, PaperPlaneIcon, UserIcon, TimeIcon, ArrowRightIcon } from '@/icons';
 import { useRouter } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
@@ -108,7 +109,7 @@ export default function ChatAssistant() {
       toast.error(err.message);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Maaf, terjadi kesalahan: ${err.message}. Pastikan API Key Anthropic sudah diatur.`
+        content: `Maaf, terjadi kesalahan: ${err.message}`
       }]);
     } finally {
       setIsLoading(false);
@@ -155,7 +156,7 @@ export default function ChatAssistant() {
         <div className="bg-gray-100 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-800/50 p-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
-              <InfoIcon />
+              <Bot className="w-5 h-5 text-orange-500" />
             </div>
             <div>
               <h3 className="text-gray-800 dark:text-white/90 font-semibold text-sm">AromOS Assistant</h3>
@@ -176,7 +177,7 @@ export default function ChatAssistant() {
             <div key={i} className={cn("flex gap-3 max-w-[85%]", msg.role === 'user' ? "ml-auto flex-row-reverse" : "")}>
               <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1",
                 msg.role === 'user' ? "bg-blue-500" : "bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800")}>
-                {msg.role === 'user' ? <UserIcon /> : <InfoIcon />}
+                {msg.role === 'user' ? <UserIcon /> : <Bot className="w-4 h-4 text-orange-500" />}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -208,7 +209,7 @@ export default function ChatAssistant() {
           {isLoading && (
             <div className="flex gap-3 max-w-[85%]">
               <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center justify-center shrink-0 mt-1">
-                <InfoIcon />
+                <Bot className="w-4 h-4 text-orange-500" />
               </div>
               <div className="p-4 rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center gap-2">
                 <TimeIcon />
