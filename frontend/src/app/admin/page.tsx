@@ -60,13 +60,13 @@ export default function AdminDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const [statsData, actData, lotsData, materialsData, qcData, slotsData, dispatchData] = await Promise.all([
-        supabaseDashboardApi.getStats(),
-        supabaseDashboardApi.getRecentActivity(),
-        supabaseLotsApi.getAll(),
-        supabaseMaterialsApi.getAll(),
-        supabaseQcApi.getAll(),
-        supabaseWarehouseApi.getSlots(),
-        supabaseDispatchApi.getAll(),
+        supabaseDashboardApi.getStats().catch(err => { console.warn('Stats error:', err); return { lots_today: 0, qc_pass_rate: 0, pending_schedules: 0, warehouse_occupancy: 0, pending_qc_count: 0 }; }),
+        supabaseDashboardApi.getRecentActivity().catch(err => { console.warn('Activity error:', err); return []; }),
+        supabaseLotsApi.getAll().catch(err => { console.warn('Lots error:', err); return []; }),
+        supabaseMaterialsApi.getAll().catch(err => { console.warn('Materials error:', err); return []; }),
+        supabaseQcApi.getAll().catch(err => { console.warn('QC error:', err); return []; }),
+        supabaseWarehouseApi.getSlots().catch(err => { console.warn('Slots error:', err); return []; }),
+        supabaseDispatchApi.getAll().catch(err => { console.warn('Dispatch error:', err); return []; }),
       ]);
       setStats(statsData as Stats);
       setActivity(actData as ActivityItem[]);
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
         qcChecks: qcData as any[],
       }));
     } catch (err) {
-      console.error('Failed to load dashboard:', err);
+      console.warn('Failed to load dashboard:', err);
     } finally {
       setLoading(false);
     }
@@ -95,13 +95,13 @@ export default function AdminDashboard() {
   }, [fetchData]);
 
   const toneClasses: Record<string, string> = {
-    yellow: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400',
-    green: 'border-green-500/30 bg-green-500/10 text-green-400',
-    slate: 'border-slate-500/30 bg-slate-500/10 text-slate-300',
-    blue: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
-    orange: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
-    purple: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
-    cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+    yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-400',
+    green: 'border-green-200 bg-green-50 text-green-700 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-400',
+    slate: 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-500/30 dark:bg-slate-500/10 dark:text-slate-300',
+    blue: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400',
+    orange: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-400',
+    purple: 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-400',
+    cyan: 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-400',
   };
 
   const getActionLabel = (action: string, table: string) => {

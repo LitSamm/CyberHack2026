@@ -102,7 +102,7 @@ export default function AIAssistantPage() {
 
   return (
     <DashboardLayout allowedRoles={['admin', 'qc', 'ppic', 'warehouse']}>
-      <div className="relative flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-8rem)] w-full bg-[#090D14] rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+      <div className="relative flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-8rem)] w-full bg-slate-50 dark:bg-[#090D14] rounded-3xl overflow-hidden border border-slate-200 dark:border-white/5 shadow-2xl">
       {/* Grid Background */}
       <div 
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -122,7 +122,7 @@ export default function AIAssistantPage() {
         {hasMessages && (
           <button 
             onClick={clearHistory}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-full backdrop-blur-md border border-white/10 transition-all text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300 rounded-full backdrop-blur-md border border-slate-300 dark:border-white/10 transition-all text-sm font-medium"
           >
             <RefreshCw className="w-4 h-4" />
             Clear
@@ -143,10 +143,10 @@ export default function AIAssistantPage() {
               </div>
             </div>
           </div>
-          <h1 className="text-3xl font-semibold text-white tracking-tight">
+          <h1 className="text-3xl font-semibold text-slate-800 dark:text-white tracking-tight">
             Good to see you, {user?.name || 'Sima Arome'}
           </h1>
-          <p className="text-slate-400 mt-2 max-w-md text-center">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md text-center">
             Saya asisten AI cerdas Anda. Ada data operasional yang ingin Anda ketahui hari ini?
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function AIAssistantPage() {
                   "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg",
                   msg.role === 'user' 
                     ? "bg-blue-600 text-white" 
-                    : "bg-[#1A2333] border border-white/10 text-blue-400"
+                    : "bg-white border border-slate-200 text-blue-600 dark:bg-[#1A2333] dark:border-white/10 dark:text-blue-400"
                 )}>
                   {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                 </div>
@@ -172,7 +172,7 @@ export default function AIAssistantPage() {
                     "px-5 py-3.5 text-[15px] leading-relaxed whitespace-pre-wrap shadow-sm",
                     msg.role === 'user' 
                       ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm" 
-                      : "bg-[#1A2333] border border-white/5 text-slate-200 rounded-2xl rounded-tl-sm"
+                      : "bg-white border border-slate-200 text-slate-800 dark:bg-[#1A2333] dark:border-white/5 dark:text-slate-200 rounded-2xl rounded-tl-sm"
                   )}>
                     {msg.content}
                   </div>
@@ -197,12 +197,12 @@ export default function AIAssistantPage() {
 
             {isLoading && (
               <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#1A2333] border border-white/10 flex items-center justify-center shrink-0 shadow-lg text-blue-400">
+                <div className="w-10 h-10 rounded-full bg-white dark:bg-[#1A2333] border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 shadow-lg text-blue-600 dark:text-blue-400">
                   <Bot className="w-5 h-5" />
                 </div>
-                <div className="px-5 py-4 bg-[#1A2333] border border-white/5 rounded-2xl rounded-tl-sm flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
-                  <span className="text-slate-400 text-sm">Menganalisis data operasional...</span>
+                <div className="px-5 py-4 bg-white dark:bg-[#1A2333] border border-slate-200 dark:border-white/5 rounded-2xl rounded-tl-sm flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                  <span className="text-slate-500 dark:text-slate-400 text-sm">Menganalisis data operasional...</span>
                 </div>
               </div>
             )}
@@ -223,7 +223,7 @@ export default function AIAssistantPage() {
               <button
                 key={i}
                 onClick={() => sendMessage(q)}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm text-slate-300 transition-all backdrop-blur-md"
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 border border-slate-300 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 rounded-full text-sm dark:text-slate-300 transition-all backdrop-blur-md"
               >
                 {q}
               </button>
@@ -236,14 +236,14 @@ export default function AIAssistantPage() {
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/30 to-purple-500/30 rounded-full blur opacity-50 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
-            className="relative flex items-center bg-[#1A2333]/90 backdrop-blur-xl border border-white/10 rounded-full p-2 shadow-2xl"
+            className="relative flex items-center bg-white/90 dark:bg-[#1A2333]/90 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full p-2 shadow-2xl"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="hello how can you help me..."
-              className="flex-1 bg-transparent border-none text-white px-6 py-3 focus:outline-none focus:ring-0 placeholder-slate-500 text-base"
+              placeholder="Ketik pertanyaan operasional..."
+              className="flex-1 bg-transparent border-none text-slate-800 dark:text-white px-6 py-3 focus:outline-none focus:ring-0 placeholder-slate-400 dark:placeholder-slate-500 text-base"
             />
             <button
               type="submit"

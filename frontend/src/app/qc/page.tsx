@@ -46,10 +46,10 @@ export default function QCDashboard() {
     try {
       const today = new Date().toISOString().slice(0, 10);
       const [mats, checks, overdue, supplierData] = await Promise.all([
-        supabaseMaterialsApi.getAll({ status: 'pending' }),
-        supabaseQcApi.getAll({ date: today }),
-        supabaseQcApi.getPending24h(),
-        supabaseSuppliersApi.getAll(),
+        supabaseMaterialsApi.getAll({ status: 'pending' }).catch(err => { console.warn('Mats error:', err); return []; }),
+        supabaseQcApi.getAll({ date: today }).catch(err => { console.warn('QC checks error:', err); return []; }),
+        supabaseQcApi.getPending24h().catch(err => { console.warn('Overdue error:', err); return []; }),
+        supabaseSuppliersApi.getAll().catch(err => { console.warn('Suppliers error:', err); return []; }),
       ]);
       setPendingMaterials(mats || []);
       setTodayChecks(checks || []);
@@ -260,7 +260,7 @@ export default function QCDashboard() {
           </div>
           <button 
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-white rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4 text-orange-500" />
             Export Laporan QC
@@ -297,13 +297,13 @@ export default function QCDashboard() {
         <section className="glass-card overflow-hidden">
           <div className="flex flex-col gap-3 border-b border-slate-700/70 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="flex items-center gap-2 text-base font-semibold text-white">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-white">
                 <Camera className="h-5 w-5 text-orange-400" />
                 AI Camera Receiving Station
               </h2>
-              <p className="mt-1 text-xs text-slate-400">Hitung material yang melewati conveyor, lalu kirim satu batch ke antrian QC.</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Hitung material yang melewati conveyor, lalu kirim satu batch ke antrian QC.</p>
             </div>
-            <div className="flex w-fit rounded-lg border border-slate-700 bg-slate-900/60 p-1">
+            <div className="flex w-fit rounded-lg border border-slate-200 bg-slate-100/60 dark:border-slate-700 dark:bg-slate-900/60 p-1">
               {[
                 { value: 'video', label: 'Video Demo' },
                 { value: 'webcam', label: 'Webcam Live' },
@@ -323,7 +323,7 @@ export default function QCDashboard() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-700 bg-black">
+            <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700 dark:bg-black">
               {cameraStatus.state === 'running' || cameraStatus.state === 'stopped' ? (
                 <img
                   key={streamKey}
@@ -338,16 +338,16 @@ export default function QCDashboard() {
                   <div className="mt-1 text-xs text-slate-600">Pilih source dan mulai receiving session.</div>
                 </div>
               )}
-              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950/80 px-2.5 py-1.5">
+              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-md border border-slate-300 bg-white/80 dark:border-slate-700 dark:bg-slate-950/80 px-2.5 py-1.5 backdrop-blur-sm">
                 <span className={`h-2 w-2 rounded-full ${
                   cameraStatus.state === 'running' ? 'animate-pulse bg-red-500' :
                   cameraStatus.state === 'error' ? 'bg-red-500' : 'bg-slate-500'
                 }`} />
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-200">{cameraStatus.state}</span>
               </div>
-              <div className="absolute bottom-3 right-3 rounded-lg border border-orange-500/40 bg-slate-950/85 px-4 py-3 text-right">
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-orange-300">Detected Items</div>
-                <div className="text-4xl font-bold leading-none text-white">{cameraStatus.count || 0}</div>
+              <div className="absolute bottom-3 right-3 rounded-lg border border-orange-500/40 bg-white/85 dark:bg-slate-950/85 px-4 py-3 text-right backdrop-blur-sm">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-300">Detected Items</div>
+                <div className="text-4xl font-bold leading-none text-slate-900 dark:text-white">{cameraStatus.count || 0}</div>
               </div>
             </div>
 
@@ -358,7 +358,7 @@ export default function QCDashboard() {
                   value={intakeForm.supplier_id}
                   onChange={e => setIntakeForm(p => ({ ...p, supplier_id: e.target.value }))}
                   disabled={cameraStatus.state === 'running'}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-sm text-white focus:border-orange-500"
+                  className="w-full rounded-lg border border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 px-3 py-2.5 text-sm text-slate-800 dark:text-white focus:border-orange-500"
                 >
                   <option value="">Pilih supplier...</option>
                   {suppliers.map(supplier => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}
@@ -370,7 +370,7 @@ export default function QCDashboard() {
                   value={intakeForm.material_name}
                   onChange={e => setIntakeForm(p => ({ ...p, material_name: e.target.value }))}
                   disabled={cameraStatus.state === 'running'}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-sm text-white focus:border-orange-500"
+                  className="w-full rounded-lg border border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 px-3 py-2.5 text-sm text-slate-800 dark:text-white focus:border-orange-500"
                 />
               </div>
               {cameraMode === 'webcam' && (
@@ -388,7 +388,7 @@ export default function QCDashboard() {
                   </select>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-700 bg-slate-800/40 p-3">
+              <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50/40 dark:border-slate-700 dark:bg-slate-800/40 p-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">Source</div>
                   <div className="mt-1 text-xs font-medium text-slate-200">{cameraMode === 'video' ? 'Video Demo' : 'Webcam Live'}</div>
@@ -430,7 +430,7 @@ export default function QCDashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Pending Queue */}
           <div className="glass-card p-5">
-            <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <Clock className="w-4 h-4 text-orange-400" />
               Antrian QC ({pendingMaterials.length})
             </h2>
@@ -443,9 +443,9 @@ export default function QCDashboard() {
                   <p>Semua material sudah diperiksa</p>
                 </div>
               ) : pendingMaterials.map(mat => (
-                <div key={mat.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700 hover:border-orange-500/30 transition-colors gap-3">
+                <div key={mat.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-orange-500/30 transition-colors gap-3">
                   <div className="min-w-0">
-                    <div className="text-white text-sm font-medium truncate">{mat.material_name}</div>
+                    <div className="text-slate-800 dark:text-white text-sm font-medium truncate">{mat.material_name}</div>
                     <div className="text-slate-500 text-xs">{mat.suppliers?.name} • {mat.quantity} {mat.unit}</div>
                     <div className="text-slate-600 text-xs">{formatDate(mat.received_date)}</div>
                   </div>
@@ -462,7 +462,7 @@ export default function QCDashboard() {
 
           {/* Today's Completed */}
           <div className="glass-card p-5">
-            <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400" />
               Selesai Hari Ini ({todayChecks.length})
             </h2>
@@ -475,10 +475,10 @@ export default function QCDashboard() {
                   <p>Belum ada pemeriksaan hari ini</p>
                 </div>
               ) : todayChecks.map(check => (
-                <div key={check.id} className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                <div key={check.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="flex items-center gap-2">
-                      <div className="text-white text-sm font-medium">
+                      <div className="text-slate-800 dark:text-white text-sm font-medium">
                         {check.incoming_materials?.material_name || check.lots?.lot_number || 'QC Check'}
                       </div>
                     </div>

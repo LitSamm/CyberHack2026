@@ -143,9 +143,21 @@ async function seedAll() {
       created_by: ppicId,
     };
   });
-  const { data: lots, error: lotErr } = await supabase.from('lots').insert(lotInserts).select();
-  if (lotErr) console.error('  ❌ Lots error:', lotErr.message);
-  else console.log(`  ✅ ${lots.length} lots created`);
+  let lots = [];
+  const { data: insertedLots, error: lotErr } = await supabase.from('lots').upsert(lotInserts, { onConflict: 'lot_number', ignoreDuplicates: true }).select();
+  if (lotErr) {
+    console.error('  ❌ Lots upsert error:', lotErr.message);
+    // If upsert fails, fetch existing lots so the script can continue
+    const { data: existingLots } = await supabase.from('lots').select('*').limit(15);
+    lots = existingLots || [];
+  } else {
+    console.log(`  ✅ ${insertedLots?.length || 0} lots processed`);
+    lots = insertedLots || [];
+    if (lots.length === 0) {
+      const { data: existingLots } = await supabase.from('lots').select('*').limit(15);
+      lots = existingLots || [];
+    }
+  }
 
   // 5. QC Checks
   console.log('\n🔬 Creating QC checks...');
@@ -186,7 +198,8 @@ async function seedAll() {
     for (let row = 1; row <= 10; row++) {
       slotInserts.push({
         slot_code: `${zone}${String(row).padStart(2, '0')}`,
-        zone,
+        zone_row: zone,
+        zone_col: row,
         temperature_zone: slotZoneMap[zone],
         is_occupied: false,
         current_lot_id: null,

@@ -95,11 +95,14 @@ export const supabaseLotsApi = {
 export const supabaseQcApi = {
   getAll: async (params?: { date?: string; result?: string }) => {
     const sb = getSupabase();
-    let query = sb.from('qc_checks').select('*, lots(lot_number, status), incoming_materials(material_name, qc_status), users!checked_by(name)').order('checked_at', { ascending: false });
+    let query = sb.from('qc_checks').select('*, lots(lot_number, status), users!checked_by(name)').order('checked_at', { ascending: false });
     if (params?.result) query = query.eq('result', params.result);
     if (params?.date) query = query.gte('checked_at', params.date).lt('checked_at', params.date + 'T23:59:59');
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase QC Error:', error);
+      return []; // Return empty array instead of crashing if migration is missing
+    }
     return data;
   },
   getPending24h: async () => {

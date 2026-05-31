@@ -142,13 +142,10 @@ export default function MaterialIntakePage() {
 
         <div className="glass-card p-4 flex flex-col lg:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari material atau supplier..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:border-orange-500"
-            />
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input type="text" placeholder="Cari material atau supplier..." value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl pl-10 pr-4 py-2.5 focus:border-orange-500 text-sm" />
           </div>
           <div className="flex gap-2 flex-wrap">
             {QC_FILTERS.map((filter) => (
@@ -159,7 +156,7 @@ export default function MaterialIntakePage() {
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   filterStatus === filter.value
                     ? 'bg-orange-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:text-white dark:hover:bg-slate-700'
                 )}
               >
                 {filter.label}
@@ -171,29 +168,29 @@ export default function MaterialIntakePage() {
         <div className="glass-card overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800/30">
-                {['Material', 'Supplier', 'Quantity', 'Tanggal Terima', 'Status QC', 'Catatan', 'Aksi'].map((heading) => (
-                  <th key={heading} className="text-left text-xs text-slate-500 font-semibold py-3 px-4 uppercase tracking-wide">
-                    {heading}
-                  </th>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                {['Material', 'Supplier', 'Quantity', 'Tanggal Terima', 'Status QC', 'Catatan', 'Aksi'].map(h => (
+                  <th key={h} className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider py-3 px-4">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-800/50">
+                  <tr key={i} className="border-b border-slate-200 dark:border-slate-800">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="py-3 px-4"><div className="skeleton h-4 rounded" /></td>
                     ))}
                   </tr>
                 ))
+              ) : filteredMaterials.length === 0 ? (
+                <tr><td colSpan={7} className="text-center py-8 text-slate-500">Tidak ada material</td></tr>
               ) : filteredMaterials.map((material) => (
-                <tr key={material.id} className="border-b border-slate-800/50 table-row-hover">
-                  <td className="py-3 px-4 text-white font-medium">{material.material_name}</td>
-                  <td className="py-3 px-4 text-slate-400">{material.suppliers?.name || '-'}</td>
-                  <td className="py-3 px-4 text-slate-300">{material.quantity} {material.unit}</td>
-                  <td className="py-3 px-4 text-slate-500 text-xs">{formatDate(material.received_date)}</td>
+                <tr key={material.id} className="border-b border-slate-200 dark:border-slate-700/50 table-row-hover">
+                  <td className="py-3 px-4 font-medium text-slate-800 dark:text-white">{material.material_name}</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{material.suppliers?.name || '-'}</td>
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-300 font-mono">{material.quantity} {material.unit}</td>
+                  <td className="py-3 px-4 text-slate-500">{formatDate(material.received_date)}</td>
                   <td className="py-3 px-4"><StatusBadge status={material.qc_status} /></td>
                   <td className="py-3 px-4 text-slate-500 text-xs max-w-xs truncate">{material.notes || '-'}</td>
                   <td className="py-3 px-4">
@@ -207,12 +204,6 @@ export default function MaterialIntakePage() {
               ))}
             </tbody>
           </table>
-          {!loading && filteredMaterials.length === 0 && (
-            <div className="text-center py-12">
-              <PackagePlus className="w-10 h-10 mx-auto text-slate-700 mb-2" />
-              <p className="text-slate-500">Belum ada material masuk</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -223,15 +214,23 @@ export default function MaterialIntakePage() {
             <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
               <X className="w-4 h-4" />
             </button>
-            <h3 className="text-lg font-semibold text-white mb-5">Catat Material Masuk</h3>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-10 h-10 bg-orange-50 dark:bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <PackagePlus className="w-5 h-5 text-orange-500 dark:text-orange-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Catat Material Baru</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Masukkan barang dari supplier ke antrian QC</p>
+              </div>
+            </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Supplier</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Supplier</label>
                 <select
                   value={formData.supplier_id}
                   onChange={(e) => setFormData((p) => ({ ...p, supplier_id: e.target.value }))}
                   required
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500"
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:border-orange-500"
                 >
                   <option value="">Pilih supplier...</option>
                   {suppliers.map((supplier) => (
@@ -240,33 +239,34 @@ export default function MaterialIntakePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Nama Material</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Nama Material</label>
                 <input
                   value={formData.material_name}
                   onChange={(e) => setFormData((p) => ({ ...p, material_name: e.target.value }))}
                   required
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500"
+                  placeholder="Minyak Nilam Grade A..."
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:border-orange-500"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1.5">Quantity</label>
+                  <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Quantity</label>
                   <input
                     type="number"
-                    min="0"
-                    step="any"
+                    min="1"
+                    step="0.01"
                     value={formData.quantity}
                     onChange={(e) => setFormData((p) => ({ ...p, quantity: e.target.value }))}
                     required
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:border-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-300 mb-1.5">Unit</label>
+                  <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Satuan Unit</label>
                   <select
                     value={formData.unit}
                     onChange={(e) => setFormData((p) => ({ ...p, unit: e.target.value }))}
-                    className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:border-orange-500"
                   >
                     <option value="kg">kg</option>
                     <option value="liter">liter</option>
@@ -275,28 +275,29 @@ export default function MaterialIntakePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Tanggal Terima</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Tanggal Terima</label>
                 <input
                   type="date"
                   value={formData.received_date}
                   onChange={(e) => setFormData((p) => ({ ...p, received_date: e.target.value }))}
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm focus:border-orange-500"
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm focus:border-orange-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">Catatan</label>
+                <label className="block text-sm text-slate-600 dark:text-slate-300 mb-1.5">Catatan Khusus (Opsional)</label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
                   rows={2}
-                  className="w-full px-3 py-2.5 bg-slate-800/60 border border-slate-700 rounded-lg text-white text-sm resize-none focus:border-orange-500"
+                  placeholder="Suhu harus dijaga di bawah 25°C..."
+                  className="w-full px-3 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-white text-sm resize-none focus:border-orange-500"
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 py-2.5 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-lg text-sm transition-colors"
+                  className="flex-1 py-2.5 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-sm transition-colors"
                 >
                   Batal
                 </button>
