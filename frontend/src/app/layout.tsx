@@ -18,7 +18,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className="dark">
-      <body className={`${inter.variable} ${outfit.variable} font-outfit bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white/90 antialiased`}>
+      <body
+        suppressHydrationWarning
+        className={`${inter.variable} ${outfit.variable} font-outfit bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white/90 antialiased`}
+      >
         <ThemeProvider>
           <SidebarProvider>
             <AuthProvider>
