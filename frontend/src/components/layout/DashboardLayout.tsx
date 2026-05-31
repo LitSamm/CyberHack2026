@@ -59,10 +59,10 @@ export default function DashboardLayout({ children, allowedRoles, onRefresh }: D
       <AppSidebar />
       <Backdrop />
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin} flex flex-col min-h-screen`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin} flex flex-col min-h-screen overflow-x-hidden`}
       >
         <AppHeader onRefresh={onRefresh} />
-        <main className="flex-1 p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6 overflow-auto">
+        <main className="flex-1 p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6">
           {children}
         </main>
       </div>

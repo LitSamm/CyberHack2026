@@ -388,7 +388,7 @@ export default function WarehouseDashboard() {
 
       {/* Interaction Modals */}
       {selectedSlot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} />
           <div className="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
             <button onClick={() => { setSelectedSlot(null); setAssignLotId(''); }} className="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-white/90">

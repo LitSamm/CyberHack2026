@@ -18,13 +18,13 @@ function GradeSlider({ label, value, onChange }: { label: string; value: number;
   return (
     <div>
       <div className="flex justify-between mb-1.5">
-        <label className="text-sm text-slate-300">{label}</label>
+        <label className="text-sm text-gray-700 dark:text-slate-300">{label}</label>
         <span className={`text-sm font-bold ${value >= 4 ? 'text-green-400' : value === 3 ? 'text-yellow-400' : 'text-red-400'}`}>
           {value}/5
         </span>
       </div>
       <input type="range" min={1} max={5} value={value} onChange={event => onChange(Number(event.target.value))}
-        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-orange-500" />
+        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-200 dark:bg-slate-700 accent-orange-500" />
       <div className="flex justify-between text-xs text-slate-600 mt-1">
         <span>Buruk</span><span>Sangat Baik</span>
       </div>
@@ -311,7 +311,7 @@ export default function QCDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">QC Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">QC Dashboard</h1>
             <p className="text-slate-400 text-sm mt-1">Pemeriksaan kualitas material masuk sebelum PPIC membuat lot</p>
           </div>
           <button 
@@ -399,7 +399,7 @@ export default function QCDashboard() {
                   cameraStatus.state === 'running' ? 'animate-pulse bg-red-500' :
                   cameraStatus.state === 'error' ? 'bg-red-500' : 'bg-slate-500'
                 }`} />
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-200">{cameraStatus.state}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 dark:text-slate-200">{cameraStatus.state}</span>
               </div>
               <div className="absolute bottom-3 right-3 rounded-lg border border-orange-500/40 bg-white/85 dark:bg-slate-950/85 px-4 py-3 text-right backdrop-blur-sm">
                 <div className="text-[10px] font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-300">Detected Items</div>
@@ -436,7 +436,7 @@ export default function QCDashboard() {
                     value={selectedCamera}
                     onChange={e => setSelectedCamera(Number(e.target.value))}
                     disabled={cameraStatus.state === 'running'}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-2.5 text-sm text-white focus:border-orange-500"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-orange-500"
                   >
                     <option value={0}>Kamera 1 (Index 0)</option>
                     <option value={1}>Kamera 2 (Index 1)</option>
@@ -447,11 +447,11 @@ export default function QCDashboard() {
               <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50/40 dark:border-slate-700 dark:bg-slate-800/40 p-3">
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">Source</div>
-                  <div className="mt-1 text-xs font-medium text-slate-200">{cameraMode === 'video' ? 'Video Demo' : 'Webcam Live'}</div>
+                  <div className="mt-1 text-xs font-medium text-gray-700 dark:text-slate-200">{cameraMode === 'video' ? 'Video Demo' : 'Webcam Live'}</div>
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-slate-500">Elapsed</div>
-                  <div className="mt-1 text-xs font-medium text-slate-200">{cameraStatus.elapsed_seconds || 0}s</div>
+                  <div className="mt-1 text-xs font-medium text-gray-700 dark:text-slate-200">{cameraStatus.elapsed_seconds || 0}s</div>
                 </div>
               </div>
               {cameraStatus.error && (
@@ -470,7 +470,7 @@ export default function QCDashboard() {
                   </button>
                 )}
                 <button onClick={resetCamera} disabled={cameraBusy || cameraStatus.state === 'running'}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 disabled:opacity-50">
+                  className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-100 dark:bg-slate-800 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-300 transition-colors hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50">
                   <RotateCcw className="h-4 w-4" /> Reset
                 </button>
               </div>
@@ -583,7 +583,7 @@ export default function QCDashboard() {
 
       {/* QC Form Modal (Manual) */}
       {showQCForm && selectedMaterial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowQCForm(false)} />
           <div className="relative glass-card w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <button onClick={() => setShowQCForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -594,7 +594,7 @@ export default function QCDashboard() {
                 <FlaskConical className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Form QC Pemeriksaan</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Form QC Pemeriksaan</h3>
                 <p className="text-slate-400 text-sm">{selectedMaterial.material_name || `${selectedMaterial.lot_number} - ${selectedMaterial.incoming_materials?.material_name}`}</p>
               </div>
             </div>
@@ -641,7 +641,7 @@ export default function QCDashboard() {
                   {powderResult && (
                     <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
                       <img src={powderResult.annotated_image} alt="Preview screening powder" className="h-28 w-full rounded border border-slate-700 object-cover" />
-                      <div className="space-y-1 text-xs text-slate-300">
+                      <div className="space-y-1 text-xs text-gray-600 dark:text-slate-300">
                         <div>Confidence: <strong>{Math.round(powderResult.confidence * 100)}%</strong></div>
                         <div>Anomali visual: <strong>{(powderResult.anomaly_ratio * 100).toFixed(2)}%</strong></div>
                         <p className="leading-relaxed text-slate-400">{powderResult.explanation}</p>
@@ -663,7 +663,7 @@ export default function QCDashboard() {
                 onChange={v => setFormData(p => ({ ...p, consistency_grade: v }))} />
 
               <div className="flex items-center justify-between p-3 bg-slate-800/60 rounded-lg border border-slate-700">
-                <label className="text-sm text-slate-300">Kontaminasi Terdeteksi</label>
+                <label className="text-sm text-gray-700 dark:text-slate-300">Kontaminasi Terdeteksi</label>
                 <button onClick={() => setFormData(p => ({ ...p, contamination_flag: !p.contamination_flag }))}
                   className={`relative w-11 h-6 rounded-full transition-colors ${formData.contamination_flag ? 'bg-red-500' : 'bg-slate-600'}`}>
                   <div className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform ${formData.contamination_flag ? 'translate-x-6' : 'translate-x-1'}`} />

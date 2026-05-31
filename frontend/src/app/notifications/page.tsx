@@ -76,18 +76,18 @@ export default function NotificationsPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Bell className="w-6 h-6 text-orange-500" />
               Semua Notifikasi
             </h1>
             <p className="text-slate-400 mt-1">Kelola dan pantau semua peringatan sistem</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={markAllRead} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-slate-700">
+            <button onClick={markAllRead} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-gray-200 dark:border-slate-700">
               <CheckCircle2 className="w-4 h-4 text-orange-500" />
               Tandai Semua Dibaca
             </button>
-            <button onClick={() => setShowConfirm(true)} className="px-4 py-2 bg-slate-800 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-slate-700">
+            <button onClick={() => setShowConfirm(true)} className="px-4 py-2 bg-gray-100 hover:bg-red-500/20 dark:bg-slate-800 dark:hover:bg-red-500/20 hover:text-red-500 dark:hover:text-red-400 hover:border-red-500/50 text-gray-800 dark:text-white rounded-lg transition-colors flex items-center gap-2 text-sm border border-gray-200 dark:border-slate-700">
               <Trash2 className="w-4 h-4" />
               Hapus Semua
             </button>
@@ -142,7 +142,7 @@ export default function NotificationsPage() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                      <h4 className={cn("text-base text-white", !notif.is_read ? "font-semibold" : "font-medium")}>
+                      <h4 className={cn("text-base text-gray-900 dark:text-white", !notif.is_read ? "font-semibold" : "font-medium")}>
                         {notif.title}
                       </h4>
                       <span className="text-xs text-slate-500 bg-slate-900 px-2 py-1 rounded-md border border-slate-800">

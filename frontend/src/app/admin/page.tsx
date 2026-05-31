@@ -175,7 +175,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-orange-400" />
-              <h2 className="text-base font-semibold text-white">Pipeline Operasional End-to-End</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Pipeline Operasional End-to-End</h2>
             </div>
             <span className="text-xs text-slate-500">Material masuk → QC → PPIC → Gudang → Dispatch</span>
           </div>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
             ) : pipeline.map((stage) => (
               <div key={stage.id} className={`rounded-lg border p-3 ${toneClasses[stage.tone] || toneClasses.slate}`}>
                 <div className="text-2xl font-bold leading-none">{stage.count}</div>
-                <div className="text-[11px] mt-2 leading-snug text-slate-300">{stage.label}</div>
+                <div className="text-[11px] mt-2 leading-snug text-gray-600 dark:text-slate-300">{stage.label}</div>
               </div>
             ))}
           </div>
