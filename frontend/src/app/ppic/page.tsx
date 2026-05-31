@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { Plus, X, Calendar, Info, Trash2, Download } from 'lucide-react';
+import { Plus, X, Calendar, Info, Trash2, Download, ArrowRight } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -62,12 +62,15 @@ export default function PPICDashboard() {
   const getColumnSchedules = (status: string) =>
     schedules.filter(s => s.status === status);
 
-  const handleDragStart = (id: string) => setDragging(id);
+  const handleDragStart = (event: React.DragEvent, id: string) => {
+    event.dataTransfer.setData('text/plain', id);
+    event.dataTransfer.effectAllowed = 'move';
+    setDragging(id);
+  };
   const handleDragEnd = () => setDragging(null);
 
-  const handleDrop = async (targetStatus: string) => {
-    if (!dragging) return;
-    const schedule = schedules.find(s => s.id === dragging);
+  const moveSchedule = async (scheduleId: string, targetStatus: string) => {
+    const schedule = schedules.find(s => s.id === scheduleId);
     if (!schedule || schedule.status === targetStatus) { setDragging(null); return; }
     if (!['queued', 'in_production'].includes(schedule.status)) {
       toast.error('Lot ini sudah keluar dari kontrol PPIC');
@@ -80,11 +83,18 @@ export default function PPICDashboard() {
       return;
     }
     try {
-      await supabasePpicApi.moveSchedule(dragging, targetStatus);
-      setSchedules(prev => prev.map(s => s.id === dragging ? { ...s, status: targetStatus } : s));
+      await supabasePpicApi.moveSchedule(scheduleId, targetStatus);
+      setSchedules(prev => prev.map(s => s.id === scheduleId ? { ...s, status: targetStatus } : s));
       toast.success(`Lot dipindah ke ${COLUMNS.find(c => c.id === targetStatus)?.label}`);
     } catch (err: any) { toast.error(err?.message || 'Gagal update status'); }
     setDragging(null);
+  };
+
+  const handleDrop = async (event: React.DragEvent, targetStatus: string) => {
+    event.preventDefault();
+    const scheduleId = event.dataTransfer.getData('text/plain') || dragging;
+    if (!scheduleId) return;
+    await moveSchedule(scheduleId, targetStatus);
   };
 
   const handleCreateSchedule = async (e: React.FormEvent) => {
@@ -149,7 +159,7 @@ export default function PPICDashboard() {
             return (
               <div key={col.id}
                 onDragOver={e => e.preventDefault()}
-                onDrop={() => handleDrop(col.id)}
+                onDrop={event => handleDrop(event, col.id)}
                 className={cn('rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-sm p-4 min-h-64 border-t-2', col.color)}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 text-sm">{col.label}</h3>
@@ -167,7 +177,7 @@ export default function PPICDashboard() {
                     return (
                     <div key={s.id}
                       draggable={canMove}
-                      onDragStart={() => handleDragStart(s.id)}
+                      onDragStart={event => handleDragStart(event, s.id)}
                       onDragEnd={handleDragEnd}
                       className={cn('kanban-card bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-800 rounded-xl p-3 cursor-grab active:cursor-grabbing select-none',
                         dragging === s.id ? 'opacity-50 ring-2 ring-orange-500' : '',
@@ -177,12 +187,26 @@ export default function PPICDashboard() {
                         <Link href={`/lots/${s.lot_id}`} className="font-mono text-orange-400 hover:text-orange-500 text-xs font-semibold">
                           {s.lots?.lot_number || 'SA-???'}
                         </Link>
+                        <div className="flex items-center gap-1">
+                        {s.status === 'queued' && (
+                          <button onClick={() => moveSchedule(s.id, 'in_production')}
+                            className="text-slate-500 hover:text-blue-400 transition-colors flex-shrink-0" title="Mulai produksi">
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
+                        {s.status === 'in_production' && (
+                          <button onClick={() => moveSchedule(s.id, 'awaiting_finished_qc')}
+                            className="text-slate-500 hover:text-yellow-400 transition-colors flex-shrink-0" title="Kirim ke QC produk jadi">
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        )}
                         {canDelete && (
                           <button onClick={() => setConfirmDelete(s.id)}
                             className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
+                        </div>
                       </div>
                       <div className="text-gray-700 dark:text-gray-300 text-xs mb-2 truncate">
                         {s.lots?.incoming_materials?.material_name || 'Material tidak diketahui'}
