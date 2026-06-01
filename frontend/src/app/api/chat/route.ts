@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const nvidia = new OpenAI({
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+  apiKey: process.env.NVIDIA_API_KEY || '',
+});
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''; 
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 export async function POST(req: Request) {
   try {
@@ -22,10 +25,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Pesan diperlukan' }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({ 
-        error: 'API Key Gemini belum diatur di server (.env.local)', 
-        answer: 'Maaf, API Key AI (Gemini) belum dikonfigurasi. Silakan tambahkan GEMINI_API_KEY di .env.local.',
+    if (!process.env.NVIDIA_API_KEY) {
+      return NextResponse.json({
+        error: 'API Key NVIDIA belum diatur di server (.env.local)',
+        answer: 'Maaf, API Key AI (NVIDIA) belum dikonfigurasi. Silakan tambahkan NVIDIA_API_KEY di .env.local.',
         suggested_actions: []
       }, { status: 500 });
     }
@@ -36,10 +39,10 @@ export async function POST(req: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Sesi tidak valid atau sudah berakhir' }, { status: 401 });
     }
-    
+
     const today = new Date().toISOString().split('T')[0];
     const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
+
     const [
       { count: pendingQcCount },
       { count: overdueQcCount },
@@ -78,15 +81,8 @@ export async function POST(req: Request) {
 --------------------------------
 `;
 
-    // 2. Call Gemini API
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
-    });
-
-    const prompt = `Kamu adalah asisten operasional AromOS untuk Sima Arome. Jawab dalam Bahasa Indonesia yang ringkas, ramah, dan profesional.
+    // 2. Call NVIDIA API
+    const systemPrompt = `Kamu adalah asisten operasional AromOS untuk Sima Arome. Jawab dalam Bahasa Indonesia yang ringkas, ramah, dan profesional.
 Gunakan data operasional berikut (snapshot) untuk menjawab pertanyaan user:
 ${snapshotText}
 
@@ -100,15 +96,30 @@ PENTING: Output Anda harus berupa format JSON murni dengan struktur berikut:
     { "label": "Label singkat tombol (misal: Buka QC Dashboard)", "url": "URL navigasi internal (misal: /qc, /warehouse, /ppic, /dispatch)" }
   ]
 }
-Berikan maksimal 3 suggested_actions yang relevan. Jika tidak ada yang relevan, kosongkan array.
+Berikan maksimal 3 suggested_actions yang relevan. Jika tidak ada yang relevan, kosongkan array.`;
 
-Pertanyaan User: ${message}
-`;
+    const completion = await nvidia.chat.completions.create({
+      model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ],
+      temperature: 0.6,
+      top_p: 0.95,
+      max_tokens: 4096,
+    } as any);
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    const parsedResponse = JSON.parse(responseText);
+    const responseText = completion.choices[0]?.message?.content || '';
+
+    // Strip markdown code fences if present
+    const cleaned = responseText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+
+    let parsedResponse: any;
+    try {
+      parsedResponse = JSON.parse(cleaned);
+    } catch {
+      parsedResponse = { answer: cleaned, suggested_actions: [] };
+    }
 
     return NextResponse.json({
       answer: parsedResponse.answer,
@@ -117,8 +128,8 @@ Pertanyaan User: ${message}
 
   } catch (error: any) {
     console.error('Chat API Error:', error);
-    return NextResponse.json({ 
-      error: error.message || 'Internal Server Error' 
+    return NextResponse.json({
+      error: error.message || 'Internal Server Error'
     }, { status: 500 });
   }
 }

@@ -1,3 +1,6 @@
+import os
+import shutil
+import tempfile
 from pathlib import Path
 
 import cv2
@@ -11,7 +14,16 @@ from powder_screening import PowderScreeningAnalyzer, decode_image, summarize_ho
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-DEMO_VIDEO = ROOT_DIR / "Apples sorted by the machine on conveyor in a fruit packing warehouse - HIDDEN THINGS (360p, h264).mp4"
+
+# Allow override via env var for flexible deployment
+_env_video = os.environ.get("DEMO_VIDEO_PATH")
+DEMO_VIDEO = Path(_env_video) if _env_video else (
+    ROOT_DIR / "Apples sorted by the machine on conveyor in a fruit packing warehouse - HIDDEN THINGS (360p, h264).mp4"
+)
+
+# Temp dir for uploaded videos
+UPLOAD_DIR = Path(tempfile.gettempdir()) / "aromos_cv_uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="AromOS Receiving Camera Service")
 controller = ReceivingSessionController()
@@ -19,8 +31,8 @@ powder_analyzer = PowderScreeningAnalyzer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -29,11 +41,49 @@ app.add_middleware(
 @app.post("/receiving/video/start")
 async def start_video():
     if not DEMO_VIDEO.exists():
-        raise HTTPException(status_code=404, detail="Demo conveyor video was not found")
+        raise HTTPException(status_code=404, detail=f"Demo conveyor video was not found at {DEMO_VIDEO}")
     try:
         return controller.start_video(DEMO_VIDEO)
     except SessionAlreadyRunning as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/receiving/video/upload")
+async def upload_and_start_video(file: UploadFile = File(...)):
+    """Upload a video file and immediately start a receiving session with it."""
+    dest = UPLOAD_DIR / (file.filename or "demo.mp4")
+    try:
+        with dest.open("wb") as f:
+            shutil.copyfileobj(file.file, f)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to save video: {exc}") from exc
+
+    # Also set as the active demo video for future /receiving/video/start calls
+    global DEMO_VIDEO
+    DEMO_VIDEO = dest
+
+    try:
+        controller.reset()
+        return controller.start_video(dest)
+    except SessionAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/receiving/browser/start")
+async def start_browser():
+    """Start a receiving session driven by frames pushed from the browser."""
+    try:
+        controller.reset()
+        return controller.start_browser()
+    except SessionAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.post("/receiving/frame/push")
+async def push_frame(file: UploadFile = File(...)):
+    """Accept a JPEG frame from the browser, process it, return updated status."""
+    data = await file.read()
+    return controller.push_frame(data)
 
 
 @app.post("/receiving/webcam/start")

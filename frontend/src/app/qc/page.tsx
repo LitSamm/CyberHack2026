@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- MJPEG streams require a plain img element. */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StatCard from '@/components/ui/StatCard';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -34,7 +34,8 @@ function GradeSlider({ label, value, onChange }: { label: string; value: number;
 
 export default function QCDashboard() {
   const { user: authUser } = useAuth();
-  const cameraServiceUrl = process.env.NEXT_PUBLIC_CV_SERVICE_URL || 'http://localhost:8000';
+  // Use relative proxy path to avoid mixed-content blocks (HTTPS Vercel → HTTP cv-service)
+  const cameraServiceUrl = '/proxy/cv';
   const [pendingMaterials, setPendingMaterials] = useState<any[]>([]);
   const [pendingFinishedLots, setPendingFinishedLots] = useState<any[]>([]);
   const [todayChecks, setTodayChecks] = useState<any[]>([]);
@@ -64,6 +65,12 @@ export default function QCDashboard() {
   const [powderBusy, setPowderBusy] = useState(false);
   const [powderResult, setPowderResult] = useState<any>(null);
   const [hosiSummary, setHosiSummary] = useState<any>(null);
+
+  // Browser webcam refs
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const browserStreamRef = useRef<MediaStream | null>(null);
+  const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const captureCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -232,33 +239,101 @@ export default function QCDashboard() {
     }
   };
 
+  const stopBrowserCapture = () => {
+    if (frameIntervalRef.current) {
+      clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
+    if (browserStreamRef.current) {
+      browserStreamRef.current.getTracks().forEach(t => t.stop());
+      browserStreamRef.current = null;
+    }
+  };
+
+  const startBrowserWebcam = async () => {
+    // Tell Python to start a browser-driven session
+    await cameraRequest('/receiving/browser/start');
+    setStreamKey(Date.now());
+
+    // Get browser webcam stream
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    }
+    browserStreamRef.current = stream;
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      await localVideoRef.current.play().catch(() => {});
+    }
+
+    // Setup capture canvas
+    if (!captureCanvasRef.current) {
+      captureCanvasRef.current = document.createElement('canvas');
+    }
+
+    // Send frames at ~10fps
+    frameIntervalRef.current = setInterval(async () => {
+      const video = localVideoRef.current;
+      const canvas = captureCanvasRef.current;
+      if (!video || !canvas || video.readyState < 2) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')?.drawImage(video, 0, 0);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const form = new FormData();
+        form.append('file', blob, 'frame.jpg');
+        try {
+          const res = await fetch(`${cameraServiceUrl}/receiving/frame/push`, { method: 'POST', body: form });
+          if (res.ok) {
+            const data = await res.json();
+            setCameraStatus(data);
+          }
+        } catch {}
+      }, 'image/jpeg', 0.7);
+    }, 100);
+  };
+
   const startCamera = async () => {
     if (!intakeForm.supplier_id || !intakeForm.material_name.trim()) {
       toast.error('Pilih supplier dan isi nama material terlebih dahulu');
       return;
     }
-    const endpoint = cameraMode === 'webcam' ? `/receiving/webcam/start?device=${selectedCamera}` : `/receiving/video/start`;
     try {
-      await cameraRequest(endpoint);
-      setStreamKey(Date.now());
-      toast.success(cameraMode === 'video' ? 'Video demo mulai diproses' : 'Webcam live aktif');
+      if (cameraMode === 'webcam') {
+        await startBrowserWebcam();
+        toast.success('Webcam live aktif');
+      } else {
+        await cameraRequest('/receiving/video/start');
+        setStreamKey(Date.now());
+        toast.success('Video demo mulai diproses');
+      }
     } catch {
-      // Error is already shown by cameraRequest
+      stopBrowserCapture();
     }
   };
 
   const stopCamera = async () => {
+    stopBrowserCapture();
     try {
       await cameraRequest('/receiving/stop');
     } catch {}
   };
 
   const resetCamera = async () => {
+    stopBrowserCapture();
     try {
       await cameraRequest('/receiving/reset');
       setStreamKey(Date.now());
     } catch {}
   };
+
+  // Cleanup browser webcam on unmount
+  useEffect(() => () => stopBrowserCapture(), []);
 
   const confirmCameraIntake = async () => {
     if (!cameraStatus.session_id || cameraStatus.count <= 0) {
@@ -380,13 +455,26 @@ export default function QCDashboard() {
 
           <div className="grid grid-cols-1 gap-5 p-5 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-900 dark:border-slate-700 dark:bg-black">
+              {/* Hidden local webcam video for frame capture */}
+              <video ref={localVideoRef} muted playsInline className="hidden" />
+
               {cameraStatus.state === 'running' || cameraStatus.state === 'stopped' ? (
-                <img
-                  key={streamKey}
-                  src={`${cameraServiceUrl}/receiving/stream?session=${cameraStatus.session_id || ''}&v=${streamKey}`}
-                  alt="Annotated conveyor camera"
-                  className="h-full w-full object-contain"
-                />
+                cameraMode === 'webcam' && browserStreamRef.current ? (
+                  // Browser webcam: show annotated MJPEG stream from Python
+                  <img
+                    key={streamKey}
+                    src={`${cameraServiceUrl}/receiving/stream?session=${cameraStatus.session_id || ''}&v=${streamKey}`}
+                    alt="Annotated webcam stream"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <img
+                    key={streamKey}
+                    src={`${cameraServiceUrl}/receiving/stream?session=${cameraStatus.session_id || ''}&v=${streamKey}`}
+                    alt="Annotated conveyor camera"
+                    className="h-full w-full object-contain"
+                  />
+                )
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <Camera className="mb-3 h-12 w-12 text-gray-400 dark:text-slate-700" />

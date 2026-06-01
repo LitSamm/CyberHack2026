@@ -49,10 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const login = async (email: string, password: string) => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+    // Use relative proxy to avoid mixed-content blocks on HTTPS deployments
+    const backendUrl = '/proxy/backend';
 
     // Strategy 1: Try backend (if configured and running)
-    if (backendUrl) {
+    {
       try {
         const res = await fetch(`${backendUrl}/api/auth/login`, {
           method: 'POST',

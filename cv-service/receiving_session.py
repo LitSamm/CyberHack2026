@@ -55,6 +55,56 @@ class ReceivingSessionController:
     def start_webcam(self, device: int = 0) -> dict:
         return self._start("webcam", device)
 
+    def start_browser(self) -> dict:
+        """Start a session driven by frames pushed from the browser."""
+        import numpy as np
+        with self.lock:
+            if self.state == "running":
+                raise SessionAlreadyRunning("A receiving session is already running")
+            self.session_id = f"RCV-{uuid.uuid4().hex[:8].upper()}"
+            self.mode = "browser"
+            self.count = 0
+            self.initial_count = 0
+            self.error = None
+            self.started_at = time.monotonic()
+            self.state = "running"
+            self.latest_jpeg = None
+            self.stopped_at = None
+        self.stop_event.clear()
+        # Initialise tracker/counter for this session (stored on self for push_frame reuse)
+        self._browser_tracker = CentroidTracker()
+        self._browser_counter = LineCounter(y=None)  # y set on first frame
+        self._browser_roi = None
+        self._browser_mask_polygon = self.configured_mask_polygon
+        return self.status()
+
+    def push_frame(self, jpeg_bytes: bytes) -> dict:
+        """Process a JPEG frame from the browser and return updated status."""
+        import numpy as np
+        arr = np.frombuffer(jpeg_bytes, dtype=np.uint8)
+        frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        if frame is None:
+            return self.status()
+
+        height, width = frame.shape[:2]
+        if self._browser_roi is None:
+            self._browser_roi = (0, 0, width, height)
+            line_y = self.configured_line_y or int(height * 0.78)
+            self._browser_counter = LineCounter(y=line_y)
+            if self._browser_mask_polygon is None:
+                self._browser_mask_polygon = default_conveyor_polygon(width, height)
+
+        boxes = detect_apples(frame, roi=self._browser_roi, mask_polygon=self._browser_mask_polygon)
+        tracks = self._browser_tracker.update(boxes)
+        self._browser_counter.update({tid: t.centroid for tid, t in tracks.items()})
+        annotated = annotate_frame(frame, tracks, self._browser_counter, roi=self._browser_roi, mask_polygon=self._browser_mask_polygon)
+        encoded, jpeg = cv2.imencode(".jpg", annotated)
+        if encoded:
+            with self.lock:
+                self.latest_jpeg = jpeg.tobytes()
+                self.count = self.initial_count + self._browser_counter.count
+        return self.status()
+
     def stop(self) -> dict:
         self.stop_event.set()
         worker = self.worker
